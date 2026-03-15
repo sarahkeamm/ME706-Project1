@@ -50,14 +50,14 @@ Servo left_font_motor;   // create servo object to control Vex Motor Controller 
 Servo left_rear_motor;   
 Servo right_rear_motor;  
 Servo right_font_motor;  
-Servo turret_motor;
+// Servo turret_motor;
 
 int speed_val = 100;
 int speed_change;
 
 int pos = 0;
 void setup(void) {
-  turret_motor.attach(11);
+  // turret_motor.attach(11);
   pinMode(LED_BUILTIN, OUTPUT);
 
   // The Trigger pin will tell the sensor to range find
@@ -137,7 +137,7 @@ STATE running() {
 #endif
 
 
-    turret_motor.write(pos);
+    // turret_motor.write(pos);
 
     if (pos == 0) {
       pos = 45;
