@@ -33,15 +33,18 @@ enum STATE {
   STOPPED
 };
 
-//Default motor control pins
+//Motor control pins
 const byte left_front = 46;
 const byte left_rear = 47;
 const byte right_rear = 50;
 const byte right_front = 51;
 
-//Default ultrasonic ranging sensor pins
+//Ultrasonic ranging sensor pins
 const int TRIG_PIN = 48;
 const int ECHO_PIN = 49;
+
+//Servo pin
+Servo sensor_servo;
 
 // Anything over 400 cm (23200 us pulse) is "out of range". Hit:If you decrease to this the ranging sensor but the timeout is short, you may not need to read up to 4meters.
 const unsigned int MAX_DIST = 23200;
@@ -58,7 +61,9 @@ int speed_change;
 int pos = 0;
 void setup(void) {
   // turret_motor.attach(11);
-  pinMode(LED_BUILTIN, OUTPUT);
+  // pinMode(LED_BUILTIN, OUTPUT);
+
+  sensor_servo.attach(10);
 
   // The Trigger pin will tell the sensor to range find
   pinMode(TRIG_PIN, OUTPUT);
@@ -329,6 +334,18 @@ void read_serial_command() {
         wheel_test();
         SerialCom->println("IM GOING");
         break;
+
+      case '90':  
+        turn90();
+        break;
+      
+      case '0':  
+        reset();
+        break;
+
+      case '180':  
+        turn180();
+        break;
      
       default:
         stop();
@@ -339,7 +356,7 @@ void read_serial_command() {
 }
 
 
-//----------------------Motor moments------------------------
+//----------------------Motor moments------------------------//
 //The Vex Motor Controller 29 use Servo Control signals to determine speed and direction, with 0 degrees meaning neutral https://en.wikipedia.org/wiki/Servo_control
 
 void disable_motors() {
@@ -375,6 +392,21 @@ void wheel_test() {
   right_rear_motor.writeMicroseconds(1500 - speed_val);
   right_font_motor.writeMicroseconds(1500 - speed_val);
 }
+
+//----------------------Servo------------------------//
+void turn90(){
+  sensor_servo.write(90);
+}
+
+void reset(){
+  sensor_servo.write(0);
+}
+
+void turn180(){
+  sensor_servo.write(180);
+}
+
+
 
 
 
