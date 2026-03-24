@@ -104,6 +104,7 @@ void setup(void) {
   delay(1000);
   SerialCom->println("Setup....");
 
+  //initialise gyroscope
   SerialCom->println("Enabling Gyroscope...");
   if (!bno08x.begin_I2C() || !bno08x.enableReport(SH2_GYROSCOPE_UNCALIBRATED, 10000)) {
     while (1) {
@@ -111,6 +112,8 @@ void setup(void) {
       delay(100);
     }
   }
+
+  //initialise motors
   enable_motors();
   forward();
 
@@ -133,8 +136,8 @@ void loop(void)  //main loop
   //     break;
   // };
 
-  //backwards - 173cm
-  //forward - 3-4cm
+  //backwards reading - 173cm
+  //forward reading - 3-4cm
 
 
   if (HC_SR04_range() <= 4.0) {
