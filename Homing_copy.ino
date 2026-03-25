@@ -234,9 +234,9 @@ void align(int dir) {
     } else {
       error = frontrightsensor_cm - backrightsensor_cm;
     }
-  speed_val = 10.0*error;
-  while (abs(error) > 0) {
-    speed_val = 10.0*error;
+  speed_val = 25.0*error;
+  while (abs(error) > 1) {
+    speed_val = 25.0*error;
 
     // dir 1 = left, 2 = right
     if (dir == 1) {
@@ -252,10 +252,10 @@ void align(int dir) {
       // right
       if (error > 0) { 
         // front is further than back, turn ccw
-        ccw();
+        cw();
       } else {
         // back is further than front, turn cw
-        cw();
+        ccw();
       } 
     }
     read_IR_sensors();
@@ -281,6 +281,15 @@ void read_IR_sensors(){
   backleftsensor_cm = 0.5*17948*pow(signalADC1,-1.22);
   frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
   backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
+  SerialCom->print("frontleftsensor_cm = ");
+  SerialCom->println(frontleftsensor_cm);
+  SerialCom->print("backleftsensor_cm = ");
+  SerialCom->println(backleftsensor_cm);
+  SerialCom->print("frontrightsensor_cm = ");
+  SerialCom->println(frontrightsensor_cm);
+  SerialCom->print("backrightsensor_cm = ");
+  SerialCom->println(backrightsensor_cm);
+
 }
   
 
@@ -356,7 +365,7 @@ void HC_SR04_range() {
     t2 = micros();
     pulse_width = t2 - t1;
     if (pulse_width > (MAX_DIST + 1000)) {
-      SerialCom->println("HC-SR04: NOT found");
+      // SerialCom->println("HC-SR04: NOT found");
       return;
     }
   }
@@ -369,7 +378,7 @@ void HC_SR04_range() {
     t2 = micros();
     pulse_width = t2 - t1;
     if (pulse_width > (MAX_DIST + 1000)) {
-      SerialCom->println("HC-SR04: Out of range");
+      // SerialCom->println("HC-SR04: Out of range");
       return;
     }
   }
@@ -385,11 +394,11 @@ void HC_SR04_range() {
 
   // Print out results
   if (pulse_width > MAX_DIST) {
-    SerialCom->println("HC-SR04: Out of range");
+    // SerialCom->println("HC-SR04: Out of range");
   } else {
-    SerialCom->print("HC-SR04:");
-    SerialCom->print(cm);
-    SerialCom->println("cm");
+    // SerialCom->print("HC-SR04:");
+    // SerialCom->print(cm);
+    // SerialCom->println("cm");
   }
 }
 
