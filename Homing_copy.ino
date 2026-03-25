@@ -117,7 +117,6 @@ void loop() {
   //  wall = true; // Set wall to true to stop the loop
   //  stop(); // Stop the robot
   //}
-
   
 
   // turn servo 90deg to left and read sonar
@@ -141,13 +140,14 @@ void loop() {
     sensor_servo.write(180);
     delay(1000);
     left_sonarsensor_cm = read_sonarsensor();
-    while (left_sonarsensor_cm > 25) {
+    while (left_sonarsensor_cm > 20) {
       strafe_left();
       left_sonarsensor_cm = read_sonarsensor();
     }
     stop();
     // align to left wall
-    align(frontleftsensor_cm, backleftsensor_cm, 1);
+    read_IR_sensors();
+    align(1);
     // ------------------------------  check if aligned to correct wall
     // rotate servo 90 deg to right and read sonar
     sensor_servo.write(0);
@@ -161,28 +161,28 @@ void loop() {
     stop();
     // turn servo 90 deg left    sensor_servo.write(180);
     left_sonarsensor_cm = read_sonarsensor();
-    while (left_sonarsensor_cm > 25) {
+    while (left_sonarsensor_cm > 20) {
       strafe_left();
       left_sonarsensor_cm = read_sonarsensor();
       delay(50);
     }
     stop();
     // align to left wall
-    align(frontleftsensor_cm, backleftsensor_cm, 1);  
+    align(1);  
     }
   } else {
     // turn servo 90 deg right
     sensor_servo.write(0);
     delay(1000);
     right_sonarsensor_cm = read_sonarsensor();
-    while (right_sonarsensor_cm > 25) {
+    while (right_sonarsensor_cm > 20) {
       strafe_right();
       right_sonarsensor_cm = read_sonarsensor();
       delay(50);
     }
     stop();
     // align to right wall
-    align(frontrightsensor_cm, backrightsensor_cm, 2);
+    align(2);
 
     // ------------------------------  check if aligned to correct wall
     // rotate servo 90 deg to left and read sonar
@@ -198,14 +198,14 @@ void loop() {
     // turn servo 90 deg right
     sensor_servo.write(0);
     right_sonarsensor_cm = read_sonarsensor();
-    while (right_sonarsensor_cm > 25) {
+    while (right_sonarsensor_cm > 20) {
       strafe_right();
       right_sonarsensor_cm = read_sonarsensor();
       delay(50);
     }
     stop();
     // align to right wall
-    align(frontrightsensor_cm, backrightsensor_cm, 2);
+    align(2);
   }
 }
 
@@ -214,20 +214,29 @@ void loop() {
   sensor_servo.write(90);
   delay(1000);
   sonarsensor_cm = read_sonarsensor();
-  while (sonarsensor_cm > 10) {
+  float initial = sonarsensor_cm;
+  while (sonarsensor_cm > 5) {
     forward();
     sonarsensor_cm = read_sonarsensor(); 
+    speed_val = (initial- sonarsensor_cm)*50;
     delay(50);   
   } 
+  speed_val = 100;
   stop();
   // should be aligned to corner and homing complete
 }
 
-void align(float frontsensor, float backsensor, int dir) {
-  float error = frontsensor - backsensor;
-  speed_val = 10*error;
+void align(int dir) {
+  read_IR_sensors();
+  float error;
+  if (dir == 1) {
+      error = frontleftsensor_cm - backleftsensor_cm;
+    } else {
+      error = frontrightsensor_cm - backrightsensor_cm;
+    }
+  speed_val = 10.0*error;
   while (abs(error) > 0) {
-    speed_val = 0.5*error;
+    speed_val = 10.0*error;
 
     // dir 1 = left, 2 = right
     if (dir == 1) {
@@ -249,14 +258,7 @@ void align(float frontsensor, float backsensor, int dir) {
         cw();
       } 
     }
-    signalADC0 = analogRead(frontleftsensor); // read the signal from the front left sensor
-    signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
-    signalADC2 = analogRead(frontrightsensor); // read the signal from the front right sensor
-    signalADC3 = analogRead(backrightsensor); // read the signal from the back right
-    frontleftsensor_cm = 17948*pow(signalADC0,-1.22);
-    backleftsensor_cm = 0.5*17948*pow(signalADC1,-1.22);
-    frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
-    backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
+    read_IR_sensors();
     if (dir == 1) {
       error = frontleftsensor_cm - backleftsensor_cm;
     } else {
@@ -265,8 +267,20 @@ void align(float frontsensor, float backsensor, int dir) {
     delay(50);
   
   }
-  speed_val = 100; // reset speed value after alignment
   stop();
+  speed_val = 100; // reset speed value after alignment
+  
+}
+
+void read_IR_sensors(){
+  signalADC0 = analogRead(frontleftsensor); // read the signal from the front left sensor
+  signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
+  signalADC2 = analogRead(frontrightsensor); // read the signal from the front right sensor
+  signalADC3 = analogRead(backrightsensor); // read the signal from the back right
+  frontleftsensor_cm = 17948*pow(signalADC0,-1.22);
+  backleftsensor_cm = 0.5*17948*pow(signalADC1,-1.22);
+  frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
+  backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
 }
   
 
