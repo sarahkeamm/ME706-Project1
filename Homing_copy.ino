@@ -35,10 +35,10 @@ int speed_change;
 
 // variables for IR and sonar sensors
 
-int frontleftsensor = A0; //frontleftsensor is attached on pinA0
-int backleftsensor = A1; //frontleftsensor is attached on pinA1
-int frontrightsensor = A2; //frontleftsensor is attached on pinA2
-int backrightsensor = A3; //frontleftsensor is attached on pinA3
+int frontleftsensor = A7; //frontleftsensor is attached on pinA0
+int backleftsensor = A6; //frontleftsensor is attached on pinA1
+int frontrightsensor = A4; //frontleftsensor is attached on pinA2
+int backrightsensor = A5; //frontleftsensor is attached on pinA3
 
 byte serialRead = 0; //for control serial communication
 
@@ -140,7 +140,7 @@ void loop() {
     sensor_servo.write(180);
     delay(1000);
     left_sonarsensor_cm = read_sonarsensor();
-    while (left_sonarsensor_cm > 20) {
+    while (left_sonarsensor_cm > 15) {
       strafe_left();
       left_sonarsensor_cm = read_sonarsensor();
     }
@@ -159,7 +159,8 @@ void loop() {
     cw();
     delay(500);
     stop();
-    // turn servo 90 deg left    sensor_servo.write(180);
+    // turn servo 90 deg left    
+    sensor_servo.write(180);
     left_sonarsensor_cm = read_sonarsensor();
     while (left_sonarsensor_cm > 15) {
       strafe_left();
@@ -214,11 +215,11 @@ void loop() {
   sensor_servo.write(90);
   delay(1000);
   sonarsensor_cm = read_sonarsensor();
-  float initial = sonarsensor_cm;
+  //float initial = sonarsensor_cm;
   while (sonarsensor_cm > 5) {
     forward();
     sonarsensor_cm = read_sonarsensor(); 
-    speed_val = (initial- sonarsensor_cm)*50;
+    //speed_val = (initial- sonarsensor_cm)*50;
     delay(50);   
   } 
   speed_val = 100;
@@ -227,18 +228,20 @@ void loop() {
 }
 
 void align(int dir) {
+  Serial.print("left sonar");
+  Serial.println(left_sonarsensor_cm);
   read_IR_sensors();
-  float error;
+  float error = 0;
   if (dir == 1) {
       error = frontleftsensor_cm - backleftsensor_cm;
   } else {
       error = frontrightsensor_cm - backrightsensor_cm;
   }
   Serial.print("Error: ");
-  Serial.print(error);
-  speed_val = 50.0*error;
+  Serial.println(error);
+  speed_val = 25.0*abs(error);
   while (abs(error) > 1) {
-    speed_val = 50.0*error;
+    speed_val = 25.0*abs(error);
 
     // dir 1 = left, 2 = right
     if (dir == 1) {
@@ -248,28 +251,30 @@ void align(int dir) {
         ccw();
         delay(100);
         stop();
-        delay(100);
+        delay(500);
       } else {
         // back is further than front, turn ccw
         cw();
         delay(100);
         stop();
-        delay(100);
+        delay(500);
       } 
     } else {
       // right
       if (error > 0) { 
         // front is further than back, turn ccw
+        Serial.println("cw");
         cw();
         delay(100);
         stop();
-        delay(100);
+        delay(500);
       } else {
+        Serial.println("ccw");
         // back is further than front, turn cw
         ccw();
         delay(100);
         stop();
-        delay(100);
+        delay(500);
       } 
     }
     
@@ -281,7 +286,11 @@ void align(int dir) {
       error = frontrightsensor_cm - backrightsensor_cm;
     }
     Serial.print("Error: ");
-    Serial.print(error);
+    Serial.println(error);
+    Serial.print("Left front: ");
+    Serial.println(frontleftsensor_cm);    
+    Serial.print("Left back: ");
+    Serial.println(backleftsensor_cm);
     delay(50);
   
   }
@@ -295,8 +304,8 @@ void read_IR_sensors(){
   signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
   signalADC2 = analogRead(frontrightsensor); // read the signal from the front right sensor
   signalADC3 = analogRead(backrightsensor); // read the signal from the back right
-  frontleftsensor_cm = 17948*pow(signalADC0,-1.22);
-  backleftsensor_cm = 0.5*17948*pow(signalADC1,-1.22);
+  frontleftsensor_cm = 0.5*17948*pow(signalADC0,-1.22);
+  backleftsensor_cm = 17948*pow(signalADC1,-1.22);
   frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
   backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
   SerialCom->print("frontleftsensor_cm = ");
