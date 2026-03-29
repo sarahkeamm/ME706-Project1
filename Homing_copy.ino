@@ -161,7 +161,7 @@ void loop() {
     stop();
     // turn servo 90 deg left    sensor_servo.write(180);
     left_sonarsensor_cm = read_sonarsensor();
-    while (left_sonarsensor_cm > 20) {
+    while (left_sonarsensor_cm > 15) {
       strafe_left();
       left_sonarsensor_cm = read_sonarsensor();
       delay(50);
@@ -175,7 +175,7 @@ void loop() {
     sensor_servo.write(0);
     delay(1000);
     right_sonarsensor_cm = read_sonarsensor();
-    while (right_sonarsensor_cm > 20) {
+    while (right_sonarsensor_cm > 15) {
       strafe_right();
       right_sonarsensor_cm = read_sonarsensor();
       delay(50);
@@ -231,39 +231,57 @@ void align(int dir) {
   float error;
   if (dir == 1) {
       error = frontleftsensor_cm - backleftsensor_cm;
-    } else {
+  } else {
       error = frontrightsensor_cm - backrightsensor_cm;
-    }
-  speed_val = 25.0*error;
+  }
+  Serial.print("Error: ");
+  Serial.print(error);
+  speed_val = 50.0*error;
   while (abs(error) > 1) {
-    speed_val = 25.0*error;
+    speed_val = 50.0*error;
 
     // dir 1 = left, 2 = right
     if (dir == 1) {
       // left 
       if (error > 0) { 
         // front is further than back, turn cw
-        cw();
+        ccw();
+        delay(100);
+        stop();
+        delay(100);
       } else {
         // back is further than front, turn ccw
-        ccw();
+        cw();
+        delay(100);
+        stop();
+        delay(100);
       } 
     } else {
       // right
       if (error > 0) { 
         // front is further than back, turn ccw
         cw();
+        delay(100);
+        stop();
+        delay(100);
       } else {
         // back is further than front, turn cw
         ccw();
+        delay(100);
+        stop();
+        delay(100);
       } 
     }
+    
     read_IR_sensors();
+    delay(50);
     if (dir == 1) {
       error = frontleftsensor_cm - backleftsensor_cm;
     } else {
       error = frontrightsensor_cm - backrightsensor_cm;
     }
+    Serial.print("Error: ");
+    Serial.print(error);
     delay(50);
   
   }
