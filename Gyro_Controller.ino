@@ -80,6 +80,7 @@ Servo turret_motor;
 
 int speed_val = 150;
 int speed_change;
+int dir = 1;
 
 //Serial Pointer
 HardwareSerial *SerialCom;
@@ -95,7 +96,7 @@ void setup(void) {
 
   //Servo Setup for ultrasonic sensor
   sensor_servo.attach(10);
-  sensor_servo.write(170);
+  sensor_servo.write(80);
 
   // Use USB Serial for debug output and reserve Serial1 for command input only.
   SerialCom = &Serial1;
@@ -104,7 +105,6 @@ void setup(void) {
   delay(1000);
   SerialCom->println("Setup....");
 
-  //initialise gyroscope
   SerialCom->println("Enabling Gyroscope...");
   if (!bno08x.begin_I2C() || !bno08x.enableReport(SH2_GYROSCOPE_UNCALIBRATED, 10000)) {
     while (1) {
@@ -112,10 +112,8 @@ void setup(void) {
       delay(100);
     }
   }
-
-  //initialise motors
   enable_motors();
-  forward();
+  strafe_right();
 
   delay(1000);  //settling time but no really needed
 }
@@ -136,21 +134,74 @@ void loop(void)  //main loop
   //     break;
   // };
 
-  //backwards reading - 173cm
-  //forward reading - 3-4cm
+  //backwards - 173cm
+  //forward - 3-4cm
 
 
-  if (HC_SR04_range() <= 4.0) {
+  if (dir == 1 && HC_SR04_range() <= 14.0) {
+    stop();
+    sensor_servo.write(170);
+    dir = 2;
+    delay(500);
+  	forward();
+  } else if (dir == 2 && HC_SR04_range() <= 4) {
+    stop();
+    sensor_servo.write(80);
+    dir = 3;
+    delay(500);
+    strafe_left();
+  } else if (dir == 3 && HC_SR04_range() >= 106) {
+    stop();
+    sensor_servo.write(170);
+    dir = 4;
+    delay(500);
     reverse();
-    // sensor_servo.write(0);
-  } else if (HC_SR04_range() >= 173) {
-    forward();
-    // sensor_servo.write(180);
+  } else if (dir == 4 && HC_SR04_range() >= 173) {
+    stop();
+    sensor_servo.write(90);
+    dir = 1;
+    delay(500);
+    strafe_right();
   }
-  // GYRO_reading();
   delay(50);
-  
+
+  //move_robot in required direction (x or y)
+  //gather error from gyro and multiply with gain to get correction value
+  //add or subtract correction value to motor speeds
 }
+
+void straight_x(int dir) {
+  int error = read_gyro();
+
+  correction = error * gain;
+
+  if (dir == 1) { //forward 
+    if (error > 0) {
+      left_font_motor.writeMicroseconds(1500 + speed_val + correction);
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 - speed_val - correction);
+      right_font_motor.writeMicroseconds(1500 - speed_val);
+    } else if (error < 0) {
+      left_font_motor.writeMicroseconds(1500 + speed_val);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+      right_rear_motor.writeMicroseconds(1500 - speed_val);
+      right_font_motor.writeMicroseconds(1500 - speed_val - correction);
+    }
+  } else if (dir == -1) { //reverse
+    if (error > 0) {
+      left_font_motor.writeMicroseconds(1500 - speed_val - correction);
+      left_rear_motor.writeMicroseconds(1500 - speed_val);
+      right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+      right_font_motor.writeMicroseconds(1500 + speed_val);
+    } else if (error < 0) {
+      left_font_motor.writeMicroseconds(1500 - speed_val);
+      left_rear_motor.writeMicroseconds(1500 - speed_val - correction);
+      right_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_font_motor.writeMicroseconds(1500 + speed_val + correction);
+} 
+}
+}
+
 
 
 STATE initialising() {
