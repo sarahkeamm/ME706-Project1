@@ -105,19 +105,10 @@ void loop() {
   }
   }
 
-  // safety check that not too close to wall ----------
-  // scan servo left, 45 deg, front, 135 deg, right 
-  
-
-  // drive forwards until front sensor within 30cm of any wall 
-  //while (wall == false) {
-  //sonarsensor_cm = read_sonarsensor(); // Read the sonar sensor distance
-  //forward();
-  //if (sonarsensor_cm < 30) {
-  //  wall = true; // Set wall to true to stop the loop
-  //  stop(); // Stop the robot
-  //}
-  
+  // turn servo forward
+  sensor_servo.write(90);
+  delay(1000);
+  sonarsensor_cm = read_sonarsensor();
 
   // turn servo 90deg to left and read sonar
   sensor_servo.write(180);
@@ -135,7 +126,17 @@ void loop() {
   Serial.println( right_sonarsensor_cm);
   delay(2000); 
 
+  
+
   if (right_sonarsensor_cm >left_sonarsensor_cm) {
+    // --------------------- If right is further than left, align to left wall first
+    // safety check 
+    if (sonarsensor_cm < 20 && left_sonarsensor_cm > 15) {
+      reverse();
+      delay(1000);
+      stop();
+    } 
+
     // turn servo 90 deg left
     sensor_servo.write(180);
     delay(1000);
@@ -147,31 +148,53 @@ void loop() {
     stop();
     // align to left wall
     read_IR_sensors();
+    delay(50);
     align(1);
+    delay(50);
     // ------------------------------  check if aligned to correct wall
     // rotate servo 90 deg to right and read sonar
     sensor_servo.write(0);
     delay(1000);
     right_sonarsensor_cm = read_sonarsensor();
     if (right_sonarsensor_cm > 120) {
+    Serial.print("Aligned to short wall");
      // if true aligned on short wall
     // rotate robot 90 deg with gyro ----------- could also change this so that it turns towards the closest wall
     cw();
-    delay(500);
+    delay(2500);
     stop();
-    // turn servo 90 deg left    
-    sensor_servo.write(180);
-    left_sonarsensor_cm = read_sonarsensor();
-    while (left_sonarsensor_cm > 15) {
-      strafe_left();
+    if (right_sonarsensor_cm < 50) {
+      // align to the right 
+      while (right_sonarsensor_cm > 15) {
+        strafe_right();
+        right_sonarsensor_cm = read_sonarsensor();
+        delay(50);
+      }
+      stop();
+      align(2); 
+    } else {
+      // turn servo 90 deg left    
+      sensor_servo.write(180);
       left_sonarsensor_cm = read_sonarsensor();
-      delay(50);
+      while (left_sonarsensor_cm > 15) {
+        strafe_left();
+        left_sonarsensor_cm = read_sonarsensor();
+        delay(50);
+      }
+      stop();
+      // align to left wall
+      align(1); 
     }
-    stop();
-    // align to left wall
-    align(1);  
+     
     }
   } else {
+    // --------------------- If left is further than right, align to right wall first
+    // safety check 
+    if (sonarsensor_cm < 20 && right_sonarsensor_cm > 15) {
+      reverse();
+      delay(1000);
+      stop();
+    } 
     // turn servo 90 deg right
     sensor_servo.write(0);
     delay(1000);
@@ -184,6 +207,7 @@ void loop() {
     stop();
     // align to right wall
     align(2);
+    delay(50);
 
     // ------------------------------  check if aligned to correct wall
     // rotate servo 90 deg to left and read sonar
@@ -192,21 +216,36 @@ void loop() {
     left_sonarsensor_cm = read_sonarsensor();
     if (left_sonarsensor_cm > 120) {
      // if true aligned on short wall
+    Serial.print("Aligned to short wall");
     // rotate robot 90 deg with gyro ----------- could also change this so that it turns towards the closest wall
     cw();
-    delay(500);
+    delay(2500);
     stop();
-    // turn servo 90 deg right
-    sensor_servo.write(0);
-    right_sonarsensor_cm = read_sonarsensor();
-    while (right_sonarsensor_cm > 20) {
+    // check which way is closer wall 
+    left_sonarsensor_cm = read_sonarsensor();
+    if (left_sonarsensor_cm < 50) {
+      // go toward left 
+      while (left_sonarsensor_cm > 15) {
+      strafe_left();
+      left_sonarsensor_cm = read_sonarsensor();
+      delay(50);
+      }
+      stop();
+      align(1);
+    } else {
+      // turn servo 90 deg right
+      sensor_servo.write(0);
+      delay(500);
+      right_sonarsensor_cm = read_sonarsensor();
+      while (right_sonarsensor_cm > 15) {
       strafe_right();
       right_sonarsensor_cm = read_sonarsensor();
       delay(50);
     }
     stop();
-    // align to right wall
     align(2);
+    }
+    
   }
 }
 
@@ -215,13 +254,21 @@ void loop() {
   sensor_servo.write(90);
   delay(1000);
   sonarsensor_cm = read_sonarsensor();
-  //float initial = sonarsensor_cm;
-  while (sonarsensor_cm > 5) {
+  float initial = sonarsensor_cm;
+  if (sonarsensor_cm > 130) {
+    while (sonarsensor_cm < 150) {
+      reverse();
+      delay(50);
+    }
+  } else {
+    while (sonarsensor_cm > 5) {
     forward();
     sonarsensor_cm = read_sonarsensor(); 
-    //speed_val = (initial- sonarsensor_cm)*50;
+    //speed_val = (initial- sonarsensor_cm)*25;
     delay(50);   
+    }
   } 
+
   speed_val = 100;
   stop();
   // should be aligned to corner and homing complete
@@ -232,6 +279,7 @@ void align(int dir) {
   Serial.println(left_sonarsensor_cm);
   read_IR_sensors();
   float error = 0;
+  float error_sum = 0;
   if (dir == 1) {
       error = frontleftsensor_cm - backleftsensor_cm;
   } else {
@@ -241,7 +289,10 @@ void align(int dir) {
   Serial.println(error);
   speed_val = 25.0*abs(error);
   while (abs(error) > 1) {
-    speed_val = 25.0*abs(error);
+    if (abs(error) < 2) {
+      error_sum += abs(error);
+    }
+    speed_val = 25.0*abs(error) + 7.5*abs(error_sum);
 
     // dir 1 = left, 2 = right
     if (dir == 1) {
@@ -249,13 +300,13 @@ void align(int dir) {
       if (error > 0) { 
         // front is further than back, turn cw
         ccw();
-        delay(100);
+        delay(50);
         stop();
-        delay(500);
+        delay(50);
       } else {
         // back is further than front, turn ccw
         cw();
-        delay(100);
+        delay(50);
         stop();
         delay(500);
       } 
