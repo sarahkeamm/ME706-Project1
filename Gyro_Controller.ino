@@ -114,7 +114,6 @@ void setup(void) {
     }
   }
   enable_motors();
-  straight_y(1);
 
   delay(1000);  //settling time but no really needed
 }
@@ -139,29 +138,35 @@ void loop(void)  //main loop
   //forward - 3-4cm
 
 
-  if (dir == 1 && HC_SR04_range() <= 14.0) {
+  // if (dir == 1 && HC_SR04_range() <= 14.0) {
+  //   stop();
+  //   sensor_servo.write(170);
+  //   dir = 2;
+  //   delay(500);
+  // 	straight_x(1);
+  // } else if (dir == 2 && HC_SR04_range() <= 4) {
+  //   stop();
+  //   sensor_servo.write(80);
+  //   dir = 3;
+  //   delay(500);
+  //   straight_y(-1);
+  // } else if (dir == 3 && HC_SR04_range() >= 106) {
+  //   stop();
+  //   sensor_servo.write(170);
+  //   dir = 4;
+  //   delay(500);
+  //   straight_x(-1);
+  // } else if (dir == 4 && HC_SR04_range() >= 173) {
+  //   stop();
+  //   sensor_servo.write(90);
+  //   dir = 1;
+  //   delay(500);
+  //   straight_y(1);
+  // }
+
+  if (HC_SR04_range() <= 15) {
     stop();
-    sensor_servo.write(170);
-    dir = 2;
-    delay(500);
-  	straight_x(1);
-  } else if (dir == 2 && HC_SR04_range() <= 4) {
-    stop();
-    sensor_servo.write(80);
-    dir = 3;
-    delay(500);
-    straight_y(-1);
-  } else if (dir == 3 && HC_SR04_range() >= 106) {
-    stop();
-    sensor_servo.write(170);
-    dir = 4;
-    delay(500);
-    straight_x(-1);
-  } else if (dir == 4 && HC_SR04_range() >= 173) {
-    stop();
-    sensor_servo.write(90);
-    dir = 1;
-    delay(500);
+  } else {
     straight_y(1);
   }
   delay(50);
