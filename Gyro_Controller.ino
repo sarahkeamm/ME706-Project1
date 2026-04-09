@@ -97,7 +97,7 @@ void setup(void) {
 
   //Servo Setup for ultrasonic sensor
   sensor_servo.attach(10);
-  sensor_servo.write(80);
+  sensor_servo.write(180);
 
   // Use USB Serial for debug output and reserve Serial1 for command input only.
   SerialCom = &Serial1;
@@ -167,7 +167,7 @@ void loop(void)  //main loop
   if (HC_SR04_range() <= 15) {
     stop();
   } else {
-    straight_y(1);
+    straight_x(1);
   }
   delay(50);
 
@@ -414,15 +414,15 @@ void Analog_Range_A4() {
 
 #ifndef NO_READ_GYRO
 float GYRO_reading() {
+  float gyroZ;
   if (bno08x.wasReset()) {
     bno08x.enableReport(SH2_GYROSCOPE_UNCALIBRATED);
   }
 
   if (bno08x.getSensorEvent(&sensorValue)) {
     if (sensorValue.sensorId == SH2_GYROSCOPE_UNCALIBRATED) {
-      float gyroZ = sensorValue.un.gyroscope.z; // Current Measured Angular Velocity Around The Z Axis
+      gyroZ = sensorValue.un.gyroscope.z; // Current Measured Angular Velocity Around The Z Axis
       // SerialCom->print("Gyroscope I2C: ");
-      // SerialCom->println(gyroZ);
     }
   }
   return gyroZ;
@@ -564,9 +564,9 @@ void straight_y(int dir) {
   SerialCom->print("Gyro Error:");
   SerialCom->println(error);
 
-  float gain = 10;
+  float gain = 100;
 
-  float correction = error * gain;
+  float correction = abs(error) * gain;
   SerialCom->print("Correction:");
   SerialCom->println(correction);
 
@@ -612,9 +612,9 @@ void straight_x(int dir) {
     SerialCom->print("Gyro Error:");
     SerialCom->println(error);
 
-    float gain = 10;
+    float gain = 200;
 
-    float correction = error * gain;
+    float correction = abs(error) * gain;
     SerialCom->print("Correction:");
     SerialCom->println(correction);
 
@@ -637,14 +637,14 @@ void straight_x(int dir) {
     }
   } else if (dir == 1) { //strafe left
     if (error > 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val); //
+      left_front_motor.writeMicroseconds(1500 - speed_val + correction); //
       left_rear_motor.writeMicroseconds(1500 + speed_val);
       right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
       right_front_motor.writeMicroseconds(1500 - speed_val);
     } else if (error < 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val);
-      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-      right_rear_motor.writeMicroseconds(1500 + speed_val);
+      left_front_motor.writeMicroseconds(1500 - speed_val - correction);
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 + speed_val - correction);
       right_front_motor.writeMicroseconds(1500 - speed_val); //
     } else {
       left_front_motor.writeMicroseconds(1500 - speed_val);
