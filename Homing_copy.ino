@@ -107,24 +107,24 @@ void loop() {
 
   // turn servo forward
   sensor_servo.write(90);
-  delay(1000);
+  delay(500);
   sonarsensor_cm = read_sonarsensor();
 
   // turn servo 90deg to left and read sonar
   sensor_servo.write(180);
-  delay(1000);
+  delay(500);
   left_sonarsensor_cm = read_sonarsensor();
   Serial.print("left sonar");
   Serial.println(left_sonarsensor_cm );
-  delay(2000); 
+  delay(500); 
 
   // turn servo 90deg to right and read sonar
   sensor_servo.write(0);
-  delay(1000);
+  delay(500);
   right_sonarsensor_cm = read_sonarsensor();
   Serial.print("right sonar");
   Serial.println( right_sonarsensor_cm);
-  delay(2000); 
+  delay(500); 
 
   
 
@@ -132,7 +132,9 @@ void loop() {
     // --------------------- If right is further than left, align to left wall first
     // safety check 
     if (sonarsensor_cm < 20 && left_sonarsensor_cm > 15) {
+      speed_val = 150;
       reverse();
+      speed_val = 100;
       delay(1000);
       stop();
     } 
@@ -142,8 +144,18 @@ void loop() {
     delay(1000);
     left_sonarsensor_cm = read_sonarsensor();
     while (left_sonarsensor_cm > 15) {
+      if (left_sonarsensor_cm < 25 && backleftsensor_cm < 4) {
+        break;
+      }
+      speed_val = 150;
       strafe_left();
+      speed_val = 100;
+      signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
+      backleftsensor_cm = 17948*pow(signalADC1,-1.22);
       left_sonarsensor_cm = read_sonarsensor();
+      Serial.print("Left sonar: ");
+      Serial.println(left_sonarsensor_cm);
+      delay(50);
     }
     stop();
     // align to left wall
@@ -166,7 +178,14 @@ void loop() {
     if (right_sonarsensor_cm < 50) {
       // align to the right 
       while (right_sonarsensor_cm > 15) {
+        if (right_sonarsensor_cm <25 && backrightsensor_cm < 4) {
+          break;
+        }
+        speed_val = 150;
         strafe_right();
+        speed_val = 100;
+        signalADC3 = analogRead(backrightsensor); // read the signal from the back right
+        backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
         right_sonarsensor_cm = read_sonarsensor();
         delay(50);
       }
@@ -176,11 +195,20 @@ void loop() {
       // turn servo 90 deg left    
       sensor_servo.write(180);
       left_sonarsensor_cm = read_sonarsensor();
-      while (left_sonarsensor_cm > 15) {
-        strafe_left();
-        left_sonarsensor_cm = read_sonarsensor();
-        delay(50);
+       while (left_sonarsensor_cm > 15) {
+        if (left_sonarsensor_cm < 25 && backleftsensor_cm < 4) {
+        break;
       }
+        speed_val = 150;
+        strafe_left();
+        speed_val = 100;
+        signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
+       backleftsensor_cm = 17948*pow(signalADC1,-1.22);
+       left_sonarsensor_cm = read_sonarsensor();
+        Serial.print("Left sonar: ");
+       Serial.println(left_sonarsensor_cm);
+        delay(50);
+    }
       stop();
       // align to left wall
       align(1); 
@@ -191,8 +219,10 @@ void loop() {
     // --------------------- If left is further than right, align to right wall first
     // safety check 
     if (sonarsensor_cm < 20 && right_sonarsensor_cm > 15) {
+      speed_val = 150;
       reverse();
-      delay(1000);
+      speed_val = 100;
+      delay(500);
       stop();
     } 
     // turn servo 90 deg right
@@ -200,10 +230,17 @@ void loop() {
     delay(1000);
     right_sonarsensor_cm = read_sonarsensor();
     while (right_sonarsensor_cm > 15) {
-      strafe_right();
-      right_sonarsensor_cm = read_sonarsensor();
-      delay(50);
-    }
+      if (right_sonarsensor_cm <25 && backrightsensor_cm < 4) {
+          break;
+        }
+        speed_val = 125;
+        strafe_right();
+        speed_val = 100;
+        signalADC3 = analogRead(backrightsensor); // read the signal from the back right
+        backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
+        right_sonarsensor_cm = read_sonarsensor();
+        delay(50);
+      }
     stop();
     // align to right wall
     align(2);
@@ -225,11 +262,20 @@ void loop() {
     left_sonarsensor_cm = read_sonarsensor();
     if (left_sonarsensor_cm < 50) {
       // go toward left 
-      while (left_sonarsensor_cm > 15) {
-      strafe_left();
-      left_sonarsensor_cm = read_sonarsensor();
-      delay(50);
+       while (left_sonarsensor_cm > 15) {
+        if (left_sonarsensor_cm < 25 && backleftsensor_cm < 4) {
+        break;
       }
+      speed_val = 150;
+      strafe_left();
+      speed_val = 100;
+      signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
+      backleftsensor_cm = 17948*pow(signalADC1,-1.22);
+      left_sonarsensor_cm = read_sonarsensor();
+      Serial.print("Left sonar: ");
+      Serial.println(left_sonarsensor_cm);
+      delay(50);
+    }
       stop();
       align(1);
     } else {
@@ -238,10 +284,17 @@ void loop() {
       delay(500);
       right_sonarsensor_cm = read_sonarsensor();
       while (right_sonarsensor_cm > 15) {
-      strafe_right();
-      right_sonarsensor_cm = read_sonarsensor();
-      delay(50);
-    }
+        if (right_sonarsensor_cm <25 && backrightsensor_cm < 4) {
+          break;
+        }
+        speed_val = 150;
+        strafe_right();
+        speed_val = 100;
+        signalADC3 = analogRead(backrightsensor); // read the signal from the back right
+        backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
+        right_sonarsensor_cm = read_sonarsensor();
+        delay(50);
+      }
     stop();
     align(2);
     }
@@ -254,21 +307,26 @@ void loop() {
   sensor_servo.write(90);
   delay(1000);
   sonarsensor_cm = read_sonarsensor();
-  float initial = sonarsensor_cm;
-  if (sonarsensor_cm > 130) {
-    while (sonarsensor_cm < 150) {
+  Serial.print(" distance from far wall: ");
+  Serial.println(sonarsensor_cm);
+  //float initial = sonarsensor_cm;
+  speed_val = 150;
+  if (sonarsensor_cm > 110) {
+    while (sonarsensor_cm < 170) {
+      Serial.print(" distance from far wall: ");
+      Serial.println(sonarsensor_cm);
+      sonarsensor_cm = read_sonarsensor();
       reverse();
       delay(50);
     }
   } else {
-    while (sonarsensor_cm > 5) {
+    while (sonarsensor_cm > 6) {
     forward();
     sonarsensor_cm = read_sonarsensor(); 
     //speed_val = (initial- sonarsensor_cm)*25;
     delay(50);   
     }
   } 
-
   speed_val = 100;
   stop();
   // should be aligned to corner and homing complete
@@ -287,12 +345,16 @@ void align(int dir) {
   }
   Serial.print("Error: ");
   Serial.println(error);
+  Serial.print("right front: ");
+    Serial.println(frontrightsensor_cm);    
+    Serial.print("right back: ");
+    Serial.println(backrightsensor_cm);
   speed_val = 25.0*abs(error);
-  while (abs(error) > 1) {
+  while (abs(error) > 0.2) {
     if (abs(error) < 2) {
       error_sum += abs(error);
     }
-    speed_val = 25.0*abs(error) + 7.5*abs(error_sum);
+    speed_val = 60 + 27.5*abs(error) + 0*abs(error_sum);
 
     // dir 1 = left, 2 = right
     if (dir == 1) {
@@ -300,15 +362,15 @@ void align(int dir) {
       if (error > 0) { 
         // front is further than back, turn cw
         ccw();
-        delay(50);
+        delay(100);
         stop();
         delay(50);
       } else {
         // back is further than front, turn ccw
         cw();
-        delay(50);
+        delay(100);
         stop();
-        delay(500);
+        delay(50);
       } 
     } else {
       // right
@@ -318,14 +380,14 @@ void align(int dir) {
         cw();
         delay(100);
         stop();
-        delay(500);
+        delay(50);
       } else {
         Serial.println("ccw");
         // back is further than front, turn cw
         ccw();
         delay(100);
         stop();
-        delay(500);
+        delay(50);
       } 
     }
     
@@ -338,10 +400,10 @@ void align(int dir) {
     }
     Serial.print("Error: ");
     Serial.println(error);
-    Serial.print("Left front: ");
-    Serial.println(frontleftsensor_cm);    
-    Serial.print("Left back: ");
-    Serial.println(backleftsensor_cm);
+    Serial.print("right front: ");
+    Serial.println(frontrightsensor_cm);    
+    Serial.print("right back: ");
+    Serial.println(backrightsensor_cm);
     delay(50);
   
   }
