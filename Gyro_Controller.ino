@@ -178,7 +178,7 @@ void loop(void)  //main loop
     // past_error_y = 0.00;
     // straight_y(direction);
   } else {
-    straight_x(1);
+    straight_x(-1);
   }
   delay(50);
 
@@ -577,25 +577,27 @@ void straight_y(int dir) {
   // SerialCom->print("Gyro Error difference:");
   // SerialCom->println(dif);
 
-  float gain = 180;
+  float left_g = 120;
+  float right_g = 150;
 
-  float correction = abs(dif) * gain;
+  float left_correction = abs(dif) * left_g;
+  float right_correction = abs(dif) * right_g;
   // SerialCom->print("Correction:");
-  SerialCom->println(correction);
+  // SerialCom->println(correction);
 
   if (dir == 1) { //forward 
     if (dif > 0) {
       // SerialCom->print("positive error");
-      left_front_motor.writeMicroseconds(1500 + speed_val + correction);
-      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+      left_front_motor.writeMicroseconds(1500 + speed_val + left_correction);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + left_correction);
       right_rear_motor.writeMicroseconds(1500 - speed_val); //
       right_front_motor.writeMicroseconds(1500 - speed_val);
     } else if (dif < 0) {
       // SerialCom->print("neg error");
       left_front_motor.writeMicroseconds(1500 + speed_val);
       left_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_rear_motor.writeMicroseconds(1500 - speed_val - correction);
-      right_front_motor.writeMicroseconds(1500 - speed_val - correction); //
+      right_rear_motor.writeMicroseconds(1500 - speed_val - right_correction);
+      right_front_motor.writeMicroseconds(1500 - speed_val - right_correction); //
     } else {
       left_front_motor.writeMicroseconds(1500 + speed_val);
       left_rear_motor.writeMicroseconds(1500 + speed_val);
@@ -606,11 +608,11 @@ void straight_y(int dir) {
     if (dif > 0) {
       left_front_motor.writeMicroseconds(1500 - speed_val); //
       left_rear_motor.writeMicroseconds(1500 - speed_val);
-      right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-      right_front_motor.writeMicroseconds(1500 + speed_val + correction);
+      right_rear_motor.writeMicroseconds(1500 + speed_val + right_correction);
+      right_front_motor.writeMicroseconds(1500 + speed_val + right_correction);
     } else if (dif < 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val - correction);
-      left_rear_motor.writeMicroseconds(1500 - speed_val - correction); //
+      left_front_motor.writeMicroseconds(1500 - speed_val - left_correction);
+      left_rear_motor.writeMicroseconds(1500 - speed_val - left_correction); //
       right_rear_motor.writeMicroseconds(1500 + speed_val);
       right_front_motor.writeMicroseconds(1500 + speed_val);
 } else {
@@ -629,7 +631,7 @@ void straight_x(int dir) {
     float error = GYRO_reading();
     float dif = error + past_error_x;
 
-    float gain = 200;
+    float gain = 180;
 
     float correction = abs(dif) * gain;
     SerialCom->print("Correction:");
@@ -637,36 +639,36 @@ void straight_x(int dir) {
 
   if (dir == -1) { //strafe right
     if (dif > 0) {
-      left_front_motor.writeMicroseconds(1500 + speed_val + correction);
+      left_front_motor.writeMicroseconds(1500 + speed_val + correction + 100);
       left_rear_motor.writeMicroseconds(1500 - speed_val);
-      right_rear_motor.writeMicroseconds(1500 - speed_val); //
+      right_rear_motor.writeMicroseconds(1500 - speed_val - 100); //
       right_front_motor.writeMicroseconds(1500 + speed_val + correction);
     } else if (dif < 0) {
-      left_front_motor.writeMicroseconds(1500 + speed_val);
-      left_rear_motor.writeMicroseconds(1500 - speed_val - correction); //
-      right_rear_motor.writeMicroseconds(1500 - speed_val - correction);
+      left_front_motor.writeMicroseconds(1500 + speed_val + 100);
+      left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
+      right_rear_motor.writeMicroseconds(1500 - speed_val - 100 - correction);
       right_front_motor.writeMicroseconds(1500 + speed_val);
     } else {
-      left_front_motor.writeMicroseconds(1500 + speed_val - 50);
+      left_front_motor.writeMicroseconds(1500 + speed_val + 100);
       left_rear_motor.writeMicroseconds(1500 - speed_val);
-      right_rear_motor.writeMicroseconds(1500 - speed_val + 50); //
+      right_rear_motor.writeMicroseconds(1500 - speed_val - 100); 
       right_front_motor.writeMicroseconds(1500 + speed_val);
     }
   } else if (dir == 1) { //strafe left
     if (dif > 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val - 50); //
-      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-      right_rear_motor.writeMicroseconds(1500 + speed_val + 50 + correction);
+      left_front_motor.writeMicroseconds(1500 - speed_val - 100); 
+      left_rear_motor.writeMicroseconds(1500 + speed_val + correction); 
+      right_rear_motor.writeMicroseconds(1500 + speed_val + 100 + correction); 
       right_front_motor.writeMicroseconds(1500 - speed_val);
     } else if (dif < 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val - 50 - correction);
+      left_front_motor.writeMicroseconds(1500 - speed_val - 100 - correction); 
       left_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_rear_motor.writeMicroseconds(1500 + speed_val + 50);
-      right_front_motor.writeMicroseconds(1500 - speed_val - correction); //
+      right_rear_motor.writeMicroseconds(1500 + speed_val + 100);
+      right_front_motor.writeMicroseconds(1500 - speed_val - correction); 
     } else {
-      left_front_motor.writeMicroseconds(1500 - speed_val - 50);
+      left_front_motor.writeMicroseconds(1500 - speed_val - 100);
       left_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_rear_motor.writeMicroseconds(1500 + speed_val + 50);
+      right_rear_motor.writeMicroseconds(1500 + speed_val + 100);
       right_front_motor.writeMicroseconds(1500 - speed_val);
     }
   } 
