@@ -307,12 +307,12 @@ void home(int dir) {
     read_IR_sensors(LEFT);
     home_side = LEFT;
       // go toward left 
-       while (left_sonarsensor_cm > 15) {
-        //if (left_sonarsensor_cm < 25 && backleftsensor_cm < 7) {
-        //break;
+    while (left_sonarsensor_cm > 15) {
+      //if (left_sonarsensor_cm < 25 && backleftsensor_cm < 7) {
+      //break;
       //}
       strafe_left();
-      read_IR_sensors(LEFT);
+      read_IR_sensors(LEFT);  ////????
       left_sonarsensor_cm = read_sonarsensor();
       delay(50);
     }
@@ -321,15 +321,15 @@ void home(int dir) {
   } else {
     read_IR_sensors(RIGHT);
     home_side = RIGHT;
-      while (right_sonarsensor_cm > 15) {
-        //if (right_sonarsensor_cm <25 && backrightsensor_cm < 12) {
-         // break;
-        //}
-        strafe_right();
-        read_IR_sensors(RIGHT);
-        right_sonarsensor_cm = read_sonarsensor();
-        delay(50);
-      }
+    while (right_sonarsensor_cm > 15) {
+      //if (right_sonarsensor_cm <25 && backrightsensor_cm < 12) {
+        // break;
+      //}
+      strafe_right();
+      read_IR_sensors(RIGHT);
+      right_sonarsensor_cm = read_sonarsensor();
+      delay(50);
+    }
     stop();
     align(RIGHT);
   }
@@ -344,7 +344,7 @@ void align(int dir) {
   float error_sum = 0;
   if (dir == LEFT) {
     error = frontleftsensor_cm - backleftsensor_cm;
-    } else {
+  } else {
   error = frontrightsensor_cm - backrightsensor_cm;
   }
   speed_val = 60 + 25.0*abs(error);
@@ -416,7 +416,7 @@ void align(int dir) {
 void read_IR_sensors(int dir){
   // dir = 1
   long sumfl = 0, sumbl =0, sumfr = 0, sumbr = 0;
-  if (dir == 1) { 
+  if (dir == LEFT) { 
     // left
   for (int i = 0; i < 4; i++) {
     sumfl += analogRead(frontleftsensor);
