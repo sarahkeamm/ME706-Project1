@@ -35,8 +35,8 @@ int speed_change;
 
 // variables for IR and sonar sensors
 
-int frontleftsensor = A7; //frontleftsensor is attached on pinA0
-int backleftsensor = A6; //frontleftsensor is attached on pinA1
+int frontleftsensor = A6; //frontleftsensor is attached on pinA0
+int backleftsensor = A7; //frontleftsensor is attached on pinA1
 int frontrightsensor = A4; //frontleftsensor is attached on pinA2
 int backrightsensor = A5; //frontleftsensor is attached on pinA3
 
@@ -417,8 +417,8 @@ void read_IR_sensors(){
   signalADC1 = analogRead(backleftsensor); // read the signal from the back left sensor
   signalADC2 = analogRead(frontrightsensor); // read the signal from the front right sensor
   signalADC3 = analogRead(backrightsensor); // read the signal from the back right
-  frontleftsensor_cm = 0.5*17948*pow(signalADC0,-1.22);
-  backleftsensor_cm = 17948*pow(signalADC1,-1.22);
+  frontleftsensor_cm = 17948*pow(signalADC0,-1.22);
+  backleftsensor_cm = 0.5*17948*pow(signalADC1,-1.22);
   frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
   backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
   SerialCom->print("frontleftsensor_cm = ");
