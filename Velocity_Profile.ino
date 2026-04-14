@@ -135,21 +135,19 @@ void loop(void)  //main loop
       stop();
       delay(500);
     } else {
-      speed_val = 80 + ((1-(HC_SR04_range()/173)) * 250); //gradually increase speed as distance decreases
       straight_y(direction);
     }
   } else if (direction == -1) {
-    if (HC_SR04_range() >= 160) {
+    if (HC_SR04_range() >= 170) {
       direction = 1;
       past_error_y = 0;
       stop();
       delay(500);
     } else {
-      speed_val = 80 + ((HC_SR04_range()/173) * 250); //gradually increase speed as distance increases
       straight_y(direction);
     }
   }
-  delay(50);
+  delay(20);
 
 }
 
@@ -548,6 +546,14 @@ void straight_y(int dir) {
   // float right_correction = abs(dif) * right_g;
   float correction = abs(dif) * gain;
 
+  if (HC_SR04_range() < 20) {
+      speed_val = (3.5*HC_SR04_range()) + 80;
+    } else if (HC_SR04_range() > 150) {
+      speed_val = (-3.5*HC_SR04_range()) + 675;
+    } else {
+      speed_val = 150;
+  }
+
   if (dir == 1) { //forward 
     if (dif > 0) {
       // SerialCom->print("positive error");
@@ -578,15 +584,15 @@ void straight_y(int dir) {
       left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
       right_rear_motor.writeMicroseconds(1500 + speed_val);
       right_front_motor.writeMicroseconds(1500 + speed_val);
-} else {
+    } else {
       left_front_motor.writeMicroseconds(1500 - speed_val);
       left_rear_motor.writeMicroseconds(1500 - speed_val); 
       right_rear_motor.writeMicroseconds(1500 + speed_val);
       right_front_motor.writeMicroseconds(1500 + speed_val);
-}
+  }
 }
 
-past_error_y = dif;
+past_error_y = dif; 
 
 }
 
