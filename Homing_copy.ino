@@ -298,6 +298,8 @@ void loop() {
     align(RIGHT);
   }
   // should be aligned to corner and homing complete
+  // ------------------- I think we should change this to use straight x and straight y to get to the correct distance from the wall
+  // -------------------- so after align to the correct wall, straight_y back or forwards to corner, maybe align again, and then straight x to correct distance from wall
   Serial.println("Homing complete!");
 }
 
