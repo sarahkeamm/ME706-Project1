@@ -285,23 +285,62 @@ void loop() {
   } 
   speed_val = 100;
   stop();
-  // final align on side 
-  if (home_side == LEFT) {
-    // turn servo 90 deg left
-    sensor_servo.write(180);
-    delay(1000);
-    left_sonarsensor_cm = read_sonarsensor();
-    align(LEFT);
-  } else {
-    // turn servo 90 deg right
-    sensor_servo.write(0);
-    delay(1000);
-    right_sonarsensor_cm = read_sonarsensor();
-    align(RIGHT);
+
+  // final adjustment 
+    // align 
+    	if (home_side == LEFT) {
+        // turn servo 90 deg left
+        sensor_servo.write(180);
+        delay(1000);
+        left_sonarsensor_cm = read_sonarsensor();
+        align(LEFT);
+        speed_val = 100;
+        while (left_sonarsensor_cm > 12.5) {
+          straight_x_homing(LEFT);
+          left_sonarsensor_cm = read_sonarsensor();
+          delay(10);
+        }
+        stop();
+      } else {
+        // turn servo 90 deg right
+        sensor_servo.write(0);
+        delay(1000);
+        right_sonarsensor_cm = read_sonarsensor();
+        align(RIGHT);
+        while (right_sonarsensor_cm > 13.5) {
+          straight_x_homing(RIGHT);
+          right_sonarsensor_cm = read_sonarsensor();
+          delay(10);
+        }
+        stop();
+      }
+    // turn servo forward
+    sensor_servo.write(90);
+    // check front and back distance
+    if (home_face = BACK) {
+        while (sonarsensor_cm < 170) {
+          sonarsensor_cm = read_sonarsensor();
+          straight_y_homing(-1);
+          delay(10);
+        }
+    } else {
+      while (sonarsensor_cm > 6) {
+      straight_y_homing(1);
+      sonarsensor_cm = read_sonarsensor(); 
+      delay(20);   
+    }
   }
+
 
   // add in final straight x and y move to make sure in corner
   Serial.println("Homing complete!");
+  Serial.print(home_side);
+  Serial.print(", ");
+  Serial.println(home_face);
+  while (1) {
+    stop();
+  }
+  // reset gyros
 }
 
 
@@ -598,9 +637,9 @@ void HC_SR04_range() {
 
 //----------------------STRAIGHT SPEED CONTROL------------------------//
 void straight_y_homing(int dir) {
+  past_error_y = 0;
   float error = GYRO_reading();
   float dif = error + past_error_y;
-  dif = 0;
 
   // float left_g = 200;
   // float right_g = 140;
@@ -648,11 +687,12 @@ void straight_y_homing(int dir) {
 }
 }
 
-past_error_y = dif;
+past_error_y = error;
 
 }
 
 void straight_x_homing(int dir) {
+  past_error_x = 0;
     float error = GYRO_reading();
     float dif = error + past_error_x;
 
