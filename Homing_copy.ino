@@ -1,6 +1,10 @@
 #include <Servo.h>  //Need for Servo pulse output
 
-//#include <Adafruit_BNO08x.h>  //Need for Gyroscope
+#include "Path_tuning.ino"
+#include "Gyro_Controller.ino"
+
+
+#include <Adafruit_BNO08x.h>  //Need for Gyroscope
 
 //Gyroscope initialisation
 //Adafruit_BNO08x bno08x(-1);
@@ -271,12 +275,14 @@ void loop() {
       //Serial.println(sonarsensor_cm);
       sonarsensor_cm = read_sonarsensor();
       reverse();
+      //straight_y_homing(-1);
       delay(50);
     }
   } else {
     home_face = FRONT;
     while (sonarsensor_cm > 6) {
     forward();
+    //straight_y_homing(1);
     sonarsensor_cm = read_sonarsensor(); 
     delay(50);   
     }
@@ -297,9 +303,8 @@ void loop() {
     right_sonarsensor_cm = read_sonarsensor();
     align(RIGHT);
   }
-  // should be aligned to corner and homing complete
-  // ------------------- I think we should change this to use straight x and straight y to get to the correct distance from the wall
-  // -------------------- so after align to the correct wall, straight_y back or forwards to corner, maybe align again, and then straight x to correct distance from wall
+
+  // add in final straight x and y move to make sure in corner
   Serial.println("Homing complete!");
 }
 
@@ -309,12 +314,13 @@ void home(int dir) {
     read_IR_sensors(LEFT);
     home_side = LEFT;
       // go toward left 
-    while (left_sonarsensor_cm > 15) {
+    while (left_sonarsensor_cm > 15 && backleftsensor_cm > 5) {
       //if (left_sonarsensor_cm < 25 && backleftsensor_cm < 7) {
       //break;
       //}
       strafe_left();
-      read_IR_sensors(LEFT);  ////????
+      //straight_x_homing(LEFT);
+      // read_IR_sensors(LEFT);  ////???? -- need to add in as safety
       left_sonarsensor_cm = read_sonarsensor();
       delay(50);
     }
@@ -323,11 +329,12 @@ void home(int dir) {
   } else {
     read_IR_sensors(RIGHT);
     home_side = RIGHT;
-    while (right_sonarsensor_cm > 15) {
+    while (right_sonarsensor_cm > 15 && backrightsensor_cm > 5) {
       //if (right_sonarsensor_cm <25 && backrightsensor_cm < 12) {
         // break;
       //}
       strafe_right();
+      //straight_x_homing(RIGHT);
       read_IR_sensors(RIGHT);
       right_sonarsensor_cm = read_sonarsensor();
       delay(50);
@@ -572,6 +579,109 @@ void HC_SR04_range() {
   }
 }
 
+//----------------------STRAIGHT SPEED CONTROL------------------------//
+void straight_y_homing(int dir) {
+  float error = GYRO_reading();
+  float dif = error + past_error_y;
+  dif = 0;
+
+  // float left_g = 200;
+  // float right_g = 140;
+  float gain = 150;
+
+  // float left_correction = abs(dif) * left_g;
+  // float right_correction = abs(dif) * right_g;
+  float correction = abs(dif) * gain;
+
+  if (dir == 1) { //forward 
+    if (dif > 0) {
+      // SerialCom->print("positive error");
+      left_front_motor.writeMicroseconds(1500 + speed_val + correction);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+      right_rear_motor.writeMicroseconds(1500 - speed_val); 
+      right_front_motor.writeMicroseconds(1500 - speed_val);
+    } else if (dif < 0) {
+      // SerialCom->print("neg error");
+      left_front_motor.writeMicroseconds(1500 + speed_val);
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 - speed_val - correction);
+      right_front_motor.writeMicroseconds(1500 - speed_val - correction); 
+    } else {
+      left_front_motor.writeMicroseconds(1500 + speed_val);
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 - speed_val);
+      right_front_motor.writeMicroseconds(1500 - speed_val); 
+    }
+  } else if (dir == -1) { //reverse
+    if (dif > 0) {
+      left_front_motor.writeMicroseconds(1500 - speed_val); 
+      left_rear_motor.writeMicroseconds(1500 - speed_val);
+      right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+      right_front_motor.writeMicroseconds(1500 + speed_val + correction);
+    } else if (dif < 0) {
+      left_front_motor.writeMicroseconds(1500 - speed_val - correction);
+      left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
+      right_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_front_motor.writeMicroseconds(1500 + speed_val);
+} else {
+      left_front_motor.writeMicroseconds(1500 - speed_val);
+      left_rear_motor.writeMicroseconds(1500 - speed_val); 
+      right_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_front_motor.writeMicroseconds(1500 + speed_val);
+}
+}
+
+past_error_y = dif;
+
+}
+
+void straight_x_homing(int dir) {
+    float error = GYRO_reading();
+    float dif = error + past_error_x;
+
+    float gain = 250;
+
+    float correction = abs(dif) * gain;
+    // SerialCom->print("Correction:");
+    // SerialCom->println(correction);
+
+  if (dir == RIGHT) { //strafe right
+    if (dif > 0) {
+      left_front_motor.writeMicroseconds(1500 + ((speed_val)) + correction);
+      left_rear_motor.writeMicroseconds(1500 - speed_val);
+      right_rear_motor.writeMicroseconds(1500 - (speed_val*1.8)); //
+      right_front_motor.writeMicroseconds(1500 + speed_val + correction);
+    } else if (dif < 0) {
+      left_front_motor.writeMicroseconds(1500 + (speed_val));
+      left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
+      right_rear_motor.writeMicroseconds(1500 - ((speed_val)*1.8) - correction);
+      right_front_motor.writeMicroseconds(1500 + speed_val);
+    } else {
+       left_front_motor.writeMicroseconds(1500 + (speed_val));
+      left_rear_motor.writeMicroseconds(1500 - (speed_val));
+      right_rear_motor.writeMicroseconds(1500 - (speed_val * 1.8));
+      right_front_motor.writeMicroseconds(1500 + speed_val);
+    }
+  } else if (dir == LEFT) { //strafe left
+    if (dif > 0) {
+      left_front_motor.writeMicroseconds(1500 - (speed_val)); 
+      left_rear_motor.writeMicroseconds(1500 + speed_val + correction); 
+      right_rear_motor.writeMicroseconds(1500 + ((speed_val) * 1.5) + correction); 
+      right_front_motor.writeMicroseconds(1500 - speed_val);
+    } else if (dif < 0) {
+      left_front_motor.writeMicroseconds(1500 - ((speed_val)) - correction); 
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 + (speed_val * 1.5));
+      right_front_motor.writeMicroseconds(1500 - speed_val - correction); 
+    } else {
+      left_front_motor.writeMicroseconds(1500 - (speed_val));
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 + (speed_val * 1.5));
+      right_front_motor.writeMicroseconds(1500 - speed_val);
+    }
+  } 
+  past_error_x = error;
+}
 
 //----------------------Motor moments------------------------
 //The Vex Motor Controller 29 use Servo Control signals to determine speed and direction, with 0 degrees meaning neutral https://en.wikipedia.org/wiki/Servo_control
