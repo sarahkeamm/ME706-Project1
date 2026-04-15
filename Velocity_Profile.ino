@@ -104,7 +104,7 @@ void setup(void) {
 
   //Servo Setup for ultrasonic sensor
   sensor_servo.attach(10);
-  sensor_servo.write(175);
+  sensor_servo.write(78);
 
   // Use USB Serial for debug output and reserve Serial1 for command input only.
   SerialCom = &Serial1;
@@ -127,52 +127,6 @@ void setup(void) {
 
 void loop(void)  //main loop
 {
-  // if ((direction == 1) && (y_dir == 1)) {
-  //   if (HC_SR04_range() <= 10) {
-  //     stop();
-  //     sensor_servo.write(180);
-  //     delay(500);
-  //     direction = 2;
-  //     x_distance = x_distance + 10;
-  //     y_dir = -1;
-  //     past_error_y = 0;
-  //     speed_val = 100;
-  //   } else {
-  //     straight_y(y_dir);
-  //   }
-  // } else if ((direction == 1) && (y_dir == -1)) {
-  //   if (HC_SR04_range() >= 163) {
-  //     stop();
-  //     sensor_servo.write(180);
-  //     delay(500);
-  //     direction = 2;
-  //     x_distance = x_distance + 10;
-  //     y_dir = 1;
-  //     past_error_y = 0;
-  //     speed_val = 100;
-  //   } else {
-  //     straight_y(y_dir);
-  //   }
-  // } else if (direction == 2) {
-  //   if (HC_SR04_range() >= 100) {
-  //     direction = 0;
-  //   }
-
-  //   if (HC_SR04_range() >= x_distance) {
-  //     stop();
-  //     sensor_servo.write(100);
-  //     delay(500);
-  //     direction = 1;
-  //     past_error_x = 0;
-  //     speed_val = 150;
-  //   } else {
-  //     straight_x(-1);
-  //   }
-
-  // } else {
-  //   stop();
-  // }
-
 
   // if (direction == 1) {
   //   if (HC_SR04_range() <= 15) {
@@ -195,7 +149,8 @@ void loop(void)  //main loop
   // }
 
     if (direction == 1) {
-    if (HC_SR04_range() <= 10) {
+      SerialCom->println(HC_SR04_range());
+    if (HC_SR04_range() <= 5.00) {
       direction = -1;
       past_error_y = 0;
       stop();
@@ -204,7 +159,7 @@ void loop(void)  //main loop
       straight_y(direction);
     }
   } else if (direction == -1) {
-    if (HC_SR04_range() >= 170) {
+    if (HC_SR04_range() >= 173.00) {
       direction = 1;
       past_error_y = 0;
       stop();
@@ -213,6 +168,7 @@ void loop(void)  //main loop
       straight_y(direction);
     }
   }
+  delay(20);
  
 }
 
@@ -603,17 +559,18 @@ void straight_y(int dir) {
   float error = GYRO_reading();
   float dif = error + past_error_y;
 
-  float gain = 100;
-
-  float correction = abs(dif) * gain;
+  float gain = 150;
 
   if (HC_SR04_range() < 20) {
       speed_val = (3.5*HC_SR04_range()) + 80;
     } else if (HC_SR04_range() > 150) {
-      speed_val = (-3.5*HC_SR04_range()) + 675;
+      speed_val = (-3.5*HC_SR04_range()) + 685.5;
     } else {
       speed_val = 150;
+      gain = 200;
   }
+
+  float correction = abs(dif) * gain;
 
   if (dir == 1) { //forward 
     if (dif > 0) {
