@@ -317,7 +317,7 @@ void loop() {
     // turn servo forward
     sensor_servo.write(90);
     // check front and back distance
-    if (home_face = BACK) {
+    if (home_face == BACK) {
         while (sonarsensor_cm < 170) {
           sonarsensor_cm = read_sonarsensor();
           straight_y_homing(-1);
@@ -374,8 +374,9 @@ void home(int dir) {
       //}
       //strafe_left();
       straight_x_homing(LEFT);
-      // read_IR_sensors(LEFT);  ////???? -- need to add in as safety
+      read_IR_sensors(LEFT);  
       left_sonarsensor_cm = read_sonarsensor();
+     
       delay(50);
     }
     stop();
@@ -417,7 +418,7 @@ void align(int dir) {
     if (abs(error) < 2) {
       error_sum += abs(error);
     }
-    speed_val = 60 + 25*abs(error) + 0*abs(error_sum);
+    speed_val = 50 + 27.5*abs(error) + 0*abs(error_sum);
 
     // dir 1 = left, 2 = right
     if (dir == LEFT) {
