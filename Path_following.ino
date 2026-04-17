@@ -132,40 +132,39 @@ void loop(void)  //main loop
     if (HC_SR04_range() <= 10) {
       stop();
       sensor_servo.write(175);
-      delay(500);
+      delay(300);
       direction = 2;
       x_distance = x_distance + 10;
       y_dir = -1;
       past_error_y = 0;
-      speed_val = 120;
+      speed_val = 100;
     } else {
       straight_y(y_dir);
     }
   } else if ((direction == 1) && (y_dir == -1)) {
-    if (HC_SR04_range() >= 163) {
+    if (HC_SR04_range() >= 173) {
       stop();
       sensor_servo.write(175);
-      delay(500);
+      delay(300);
       direction = 2;
       x_distance = x_distance + 10;
       y_dir = 1;
       past_error_y = 0;
-      speed_val = 120;
+      speed_val = 100;
     } else {
       straight_y(y_dir);
     }
   } else if (direction == 2) {
-    if (HC_SR04_range() >= 100) {
+    if (HC_SR04_range() >= 106) {
       direction = 0;
     }
 
     if (HC_SR04_range() >= x_distance) {
       stop();
       sensor_servo.write(78);
-      delay(500);
+      delay(300);
       direction = 1;
       past_error_x = 0;
-      speed_val = 150;
     } else {
       straight_x(-1);
     }
@@ -195,12 +194,11 @@ void loop(void)  //main loop
   // }
 
   //   if (direction == 1) {
-  //     SerialCom->println(HC_SR04_range());
   //   if (HC_SR04_range() <= 5.00) {
   //     direction = -1;
   //     past_error_y = 0;
   //     stop();
-  //     delay(500);
+  //     delay(400);
   //   } else {
   //     straight_y(direction);
   //   }
@@ -209,7 +207,7 @@ void loop(void)  //main loop
   //     direction = 1;
   //     past_error_y = 0;
   //     stop();
-  //     delay(500);
+  //     delay(400);
   //   } else {
   //     straight_y(direction);
   //   }
@@ -605,15 +603,14 @@ void straight_y(int dir) {
   float error = GYRO_reading();
   float dif = error + past_error_y;
 
-  float gain = 120;
+  float gain = 150;
 
-  if (HC_SR04_range() < 35) {
+  if (HC_SR04_range() <= 45) {
       speed_val = (2*HC_SR04_range()) + 80;
-    } else if (HC_SR04_range() > 138) {
+    } else if (HC_SR04_range() >= 138) {
       speed_val = (-2*HC_SR04_range()) + 426;
     } else {
       speed_val = 150;
-      gain = 180;
   }
 
   float correction = abs(dif) * gain;
