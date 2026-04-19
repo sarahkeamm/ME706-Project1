@@ -95,6 +95,9 @@ int home_face = 0;
 Servo turret_motor;
 int pos = 0;
 
+float kp = 27.5;
+float ki = 1;
+
 // #define NO_READ_GYRO  //Uncomment if GYRO is not attached.
 // #define NO_HC -SR04  //Uncomment if HC-SR04 ultrasonic ranging sensor is not attached.
 // #define NO_BATTERY_V_OK //Uncomment if BATTERY_V_OK if you do not care about battery damage.
@@ -124,6 +127,8 @@ void setup(void) {
   delay(1000);
 }
 
+
+
 void loop(void) {
   delay(50);
   switch (machine_state) {
@@ -141,6 +146,7 @@ void loop(void) {
       break;
   }
 }
+
 
   
 //--------------------------------------------------------------------------//
@@ -483,8 +489,8 @@ void home(int dir) {
 }
 
 void align(int dir) {
-  Serial.print("left sonar");
-  Serial.println(left_sonarsensor_cm);
+  //Serial.print("left sonar");
+  //Serial.println(left_sonarsensor_cm);
   read_IR_sensors(dir);
   float error = 0;
   float error_sum = 0;
@@ -493,54 +499,54 @@ void align(int dir) {
   } else {
   error = frontrightsensor_cm - backrightsensor_cm;
   }
-  speed_val = 60 + 25.0*abs(error);
+  speed_val = 55 + kp*abs(error);
 
   // control loop 
   while (abs(error) > 0.2) {
     if (abs(error) < 2) {
       error_sum += abs(error);
     }
-    speed_val = 50 + 27.5*abs(error) + 0*abs(error_sum);
+    speed_val = 55 + kp*abs(error) + ki*abs(error_sum);
 
     // dir 1 = left, 2 = right
     if (dir == LEFT) {
       // left 
       if (error > 0) { 
         // front is further than back, turn cw
-         Serial.println("ccw");
+        // Serial.println("ccw");
         ccw();
-        delay(100);
-        stop();
         delay(50);
+        stop();
+        delay(10);
       } else {
         // back is further than front, turn ccw
-         Serial.println("cw");
+        // Serial.println("cw");
         cw();
-        delay(100);
-        stop();
         delay(50);
+        stop();
+        delay(10);
       } 
     } else {
       // right
       if (error > 0) { 
         // front is further than back, turn ccw
-        Serial.println("cw");
+        //Serial.println("cw");
         cw();
-        delay(100);
-        stop();
         delay(50);
+        stop();
+        delay(10);
       } else {
-        Serial.println("ccw");
+        //Serial.println("ccw");
         // back is further than front, turn cw
         ccw();
-        delay(100);
-        stop();
         delay(50);
+        stop();
+        delay(10);
       } 
     }
     
     read_IR_sensors(dir);
-    delay(50);
+    delay(10);
     if (dir == LEFT) {
       error = frontleftsensor_cm - backleftsensor_cm;
     } else {
@@ -548,11 +554,11 @@ void align(int dir) {
     }
     Serial.print("Error: ");
     Serial.println(error);
-    Serial.print("right front: ");
-    Serial.println(frontrightsensor_cm);    
-    Serial.print("right back: ");
-    Serial.println(backrightsensor_cm);
-    delay(50);
+    // Serial.print("right front: ");
+    // Serial.println(frontrightsensor_cm);    
+    // Serial.print("right back: ");
+    // Serial.println(backrightsensor_cm);
+    delay(10);
   
   }
   stop();
@@ -575,10 +581,10 @@ void read_IR_sensors(int dir){
   frontleftsensor_cm = 17948*pow(signalADC0,-1.22);
   backleftsensor_cm = 17948*pow(signalADC1,-1.22);
   backleftsensor_cm = backleftsensor_cm / (0.024 * frontleftsensor + 0.86857);
-  SerialCom->print("frontleftsensor_cm = ");
-  SerialCom->println(frontleftsensor_cm);
-  SerialCom->print("backleftsensor_cm = ");
-  SerialCom->println(backleftsensor_cm);
+  Serial.print("frontleftsensor_cm = ");
+  Serial.println(frontleftsensor_cm);
+  Serial.print("backleftsensor_cm = ");
+  Serial.println(backleftsensor_cm);
   Serial.print("left front: ");
   Serial.println(frontleftsensor_cm);    
   Serial.print("left back: ");
@@ -595,10 +601,10 @@ void read_IR_sensors(int dir){
     frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
     backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
     backrightsensor_cm = backrightsensor_cm * (-0.0167* frontrightsensor_cm + 1.0076);
-    SerialCom->print("frontrightsensor_cm = ");
-    SerialCom->println(frontrightsensor_cm);
-    SerialCom->print("backrightsensor_cm = ");
-    SerialCom->println(backrightsensor_cm);
+    Serial.print("frontrightsensor_cm = ");
+    Serial.println(frontrightsensor_cm);
+    Serial.print("backrightsensor_cm = ");
+    Serial.println(backrightsensor_cm);
     Serial.print("right front: ");
     Serial.println(frontrightsensor_cm);    
     Serial.print("right back: ");
