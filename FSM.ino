@@ -395,12 +395,12 @@ STATE path_following(){
       sensor_servo.write(175);
       delay(500);
       direction = 2;
-      x_distance = x_distance + 10;
+      x_distance = x_distance + 8;
       if (x_distance >= 106) {
-        x_distance = 100;
+        x_distance = 106;
       }
       y_dir = -1;
-      past_error_y = 0;
+      past_error_y = -past_error_y;
       speed_val = 100;
     } else {
       straight_y(y_dir);
@@ -411,12 +411,12 @@ STATE path_following(){
       sensor_servo.write(175);
       delay(500);
       direction = 2;
-      x_distance = x_distance + 10;
+      x_distance = x_distance + 8;
       if (x_distance >= 106) {
         x_distance = 106;
       }
       y_dir = 1;
-      past_error_y = 0;
+      past_error_y = -past_error_y;
       speed_val = 100;
     } else {
       straight_y(y_dir);
@@ -1006,17 +1006,17 @@ void straight_x(int dir)      {
     if (dif > 0) {
       left_front_motor.writeMicroseconds(1500 + ((speed_val + correction)*1.2));
       left_rear_motor.writeMicroseconds(1500 - (speed_val*0.95));
-      right_rear_motor.writeMicroseconds(1500 - (speed_val*2)); //
+      right_rear_motor.writeMicroseconds(1500 - (speed_val*1.5)); //
       right_front_motor.writeMicroseconds(1500 + (0.95*(speed_val + correction)));
     } else if (dif < 0) {
       left_front_motor.writeMicroseconds(1500 + (speed_val*1.2));
       left_rear_motor.writeMicroseconds(1500 - ((correction + speed_val)*0.95)); 
-      right_rear_motor.writeMicroseconds(1500 - ((correction + speed_val)*2));
+      right_rear_motor.writeMicroseconds(1500 - ((correction + speed_val)*1.5));
       right_front_motor.writeMicroseconds(1500 + (speed_val*0.95));
     } else {
       left_front_motor.writeMicroseconds(1500 + (speed_val*1.2));
       left_rear_motor.writeMicroseconds(1500 - (speed_val*0.95));
-      right_rear_motor.writeMicroseconds(1500 - (speed_val*2));
+      right_rear_motor.writeMicroseconds(1500 - (speed_val*1.5));
       right_front_motor.writeMicroseconds(1500 + (speed_val*0.95));
     }
   } else if (dir == 1) { //strafe left
