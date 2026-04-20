@@ -992,9 +992,7 @@ float error = GYRO_reading();
 past_error_y = dif; 
 }
 
-void straight_x(int dir)      if (x_distance >= 106) {
-        x_distance = 100;
-      } {
+void straight_x(int dir)      { 
     float error = GYRO_reading();
     float dif = error + past_error_x;
 
@@ -1008,17 +1006,17 @@ void straight_x(int dir)      if (x_distance >= 106) {
     if (dif > 0) {
       left_front_motor.writeMicroseconds(1500 + ((speed_val + correction)*1.2));
       left_rear_motor.writeMicroseconds(1500 - (speed_val*0.95));
-      right_rear_motor.writeMicroseconds(1500 - (speed_val*2.3)); //
+      right_rear_motor.writeMicroseconds(1500 - (speed_val*2)); //
       right_front_motor.writeMicroseconds(1500 + (0.95*(speed_val + correction)));
     } else if (dif < 0) {
       left_front_motor.writeMicroseconds(1500 + (speed_val*1.2));
       left_rear_motor.writeMicroseconds(1500 - ((correction + speed_val)*0.95)); 
-      right_rear_motor.writeMicroseconds(1500 - ((correction + speed_val)*2.3));
+      right_rear_motor.writeMicroseconds(1500 - ((correction + speed_val)*2));
       right_front_motor.writeMicroseconds(1500 + (speed_val*0.95));
     } else {
       left_front_motor.writeMicroseconds(1500 + (speed_val*1.2));
       left_rear_motor.writeMicroseconds(1500 - (speed_val*0.95));
-      right_rear_motor.writeMicroseconds(1500 - (speed_val*2.3));
+      right_rear_motor.writeMicroseconds(1500 - (speed_val*2));
       right_front_motor.writeMicroseconds(1500 + (speed_val*0.95));
     }
   } else if (dir == 1) { //strafe left
@@ -1040,4 +1038,5 @@ void straight_x(int dir)      if (x_distance >= 106) {
     }
   } 
   past_error_x = error;
+
 }
