@@ -458,20 +458,36 @@ void align(int dir) {
     }
     
     read_IR_sensors(dir);
+
+    Serial.print("Error: ");
+    Serial.println(error);
+    Serial.print("left front 1: ");
+    Serial.println(frontleftsensor_cm);    
+    Serial.print("left back: ");
+    Serial.println(backleftsensor_cm);
+
     delay(50);
     if (dir == LEFT) {
       error = frontleftsensor_cm - backleftsensor_cm;
+      // if long range sensor out of range to close to the wall 
+      if (frontleftsensor_cm < 7){
+        //move right 
+        strafe_right();
+        delay(1000);
+        stop();
+      }
     } else {
       error = frontrightsensor_cm - backrightsensor_cm;
+      // if long range sensor out of range to close to the wall 
+      if (frontrightsensor_cm < 7){
+        //move right 
+        strafe_left();
+        delay(1000);
+        stop();
+      }
     }
-    Serial.print("Error: ");
-    Serial.println(error);
-    Serial.print("right front: ");
-    Serial.println(frontrightsensor_cm);    
-    Serial.print("right back: ");
-    Serial.println(backrightsensor_cm);
     delay(50);
-  
+    
   }
   stop();
   speed_val = 100; // reset speed value after alignment
