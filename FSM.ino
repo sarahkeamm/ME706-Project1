@@ -481,7 +481,6 @@ void home(int dir) {
     align(RIGHT);
   }
   speed_val = 100;
-  return PATH_FOLLOWING;
 }
 
 void align(int dir) {
