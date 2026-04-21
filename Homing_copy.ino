@@ -303,34 +303,49 @@ void loop() {
   speed_val = 100;
   stop();
 
-  // // final adjustment 
-  //   // align 
-  //   	if (home_side == LEFT) {
-  //       // turn servo 90 deg left
-  //       sensor_servo.write(180);
-  //       delay(1000);
-  //       left_sonarsensor_cm = read_sonarsensor();
-  //       align(LEFT);
-  //       speed_val = 100;
-  //       while (left_sonarsensor_cm > 12.5) {
-  //         straight_x_homing(LEFT);
-  //         left_sonarsensor_cm = read_sonarsensor();
-  //         delay(10);
-  //       }
-  //       stop();
-  //     } else {
-  //       // turn servo 90 deg right
-  //       sensor_servo.write(0);
-  //       delay(1000);
-  //       right_sonarsensor_cm = read_sonarsensor();
-  //       align(RIGHT);
-  //       while (right_sonarsensor_cm > 13.5) {
-  //         straight_x_homing(RIGHT);
-  //         right_sonarsensor_cm = read_sonarsensor();
-  //         delay(10);
-  //       }
-  //       stop();
-  //     }
+  // final adjustment 
+  speed_val = 100;
+  if (home_side == LEFT) {
+    // turn servo 90 deg left
+    sensor_servo.write(180);
+    delay(800);
+    align(LEFT);
+    left_sonarsensor_cm = read_sonarsensor();
+    while (left_sonarsensor_cm > 12.5) {
+      straight_x_homing(LEFT);
+      left_sonarsensor_cm = read_sonarsensor();
+      delay(5);
+    }
+    sensor_servo.write(0);
+    right_sonarsensor_cm = read_sonarsensor();
+    while (right_sonarsensor_cm < 13.5) {
+      straight_x_homing(RIGHT);
+      right_sonarsensor_cm = read_sonarsensor();
+      delay(5);
+    }
+    stop();
+    align(LEFT);
+  } else {
+    // turn servo 90 deg right
+    sensor_servo.write(0);
+    delay(800);
+    align(LEFT);
+    right_sonarsensor_cm = read_sonarsensor();
+    while (right_sonarsensor_cm > 13.5) {
+      straight_x_homing(RIGHT);
+      left_sonarsensor_cm = read_sonarsensor();
+      delay(5);
+    }
+    sensor_servo.write(0);
+    right_sonarsensor_cm = read_sonarsensor();
+    while (left_sonarsensor_cm < 12.5) {
+      straight_x_homing(LEFT);
+      left_sonarsensor_cm = read_sonarsensor();
+      delay(5);
+    }
+    stop();
+    align(RIGHT);
+  }
   //   // turn servo forward
   //   sensor_servo.write(90);
   //   // check front and back distance
@@ -416,8 +431,6 @@ void home(int dir) {
 }
 
 void align(int dir) {
-  Serial.print("left sonar");
-  Serial.println(left_sonarsensor_cm);
   read_IR_sensors(dir);
   float error = 0;
   float error_sum = 0;
