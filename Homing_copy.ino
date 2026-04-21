@@ -87,6 +87,9 @@ float past_error_x = 0.00;
 
 int pos = 0;
 
+float wall_sensor_left = 0;
+float wall_sensor_right = 0;
+
 void setup(void) {
   Serial.begin(115200);
   turret_motor.attach(11);
@@ -116,6 +119,8 @@ void setup(void) {
 
   delay(500);  //settling time but no really needed
 }
+
+
 
 
 void loop() {
@@ -159,7 +164,7 @@ void loop() {
     if (sonarsensor_cm < 20 && left_sonarsensor_cm > 15) {
       speed_val = 150;
       reverse();
-      speed_val = 100;
+      speed_val = 100; // ???
       delay(1000);
       stop();
     } 
@@ -187,6 +192,9 @@ void loop() {
       cw();
       delay(2500);
       stop();
+      
+      right_sonarsensor_cm = read_sonarsensor();
+      delay(10); 
 
       // align to closest wall 
       if (right_sonarsensor_cm < 50) {
@@ -238,6 +246,7 @@ void loop() {
       stop();
       // check which way is closer wall 
       left_sonarsensor_cm = read_sonarsensor();
+      delay(10); 
       if (left_sonarsensor_cm < 50) {
         // home towards left wall
         home_side = LEFT;
@@ -255,6 +264,14 @@ void loop() {
   }
 
   // align front/back direction 
+
+  if (home_side == LEFT) {
+    read_IR_sensors(LEFT);
+    wall_sensor_left = frontleftsensor_cm;
+  } else {
+    read_IR_sensors(RIGHT);
+    wall_sensor_right = frontrightsensor_cm;
+  }
 
   // turn servo forward
   sensor_servo.write(90);
@@ -286,50 +303,50 @@ void loop() {
   speed_val = 100;
   stop();
 
-  // final adjustment 
-    // align 
-    	if (home_side == LEFT) {
-        // turn servo 90 deg left
-        sensor_servo.write(180);
-        delay(1000);
-        left_sonarsensor_cm = read_sonarsensor();
-        align(LEFT);
-        speed_val = 100;
-        while (left_sonarsensor_cm > 12.5) {
-          straight_x_homing(LEFT);
-          left_sonarsensor_cm = read_sonarsensor();
-          delay(10);
-        }
-        stop();
-      } else {
-        // turn servo 90 deg right
-        sensor_servo.write(0);
-        delay(1000);
-        right_sonarsensor_cm = read_sonarsensor();
-        align(RIGHT);
-        while (right_sonarsensor_cm > 13.5) {
-          straight_x_homing(RIGHT);
-          right_sonarsensor_cm = read_sonarsensor();
-          delay(10);
-        }
-        stop();
-      }
-    // turn servo forward
-    sensor_servo.write(90);
-    // check front and back distance
-    if (home_face == BACK) {
-        while (sonarsensor_cm < 170) {
-          sonarsensor_cm = read_sonarsensor();
-          straight_y_homing(-1);
-          delay(10);
-        }
-    } else {
-      while (sonarsensor_cm > 6) {
-      straight_y_homing(1);
-      sonarsensor_cm = read_sonarsensor(); 
-      delay(20);   
-    }
-  }
+  // // final adjustment 
+  //   // align 
+  //   	if (home_side == LEFT) {
+  //       // turn servo 90 deg left
+  //       sensor_servo.write(180);
+  //       delay(1000);
+  //       left_sonarsensor_cm = read_sonarsensor();
+  //       align(LEFT);
+  //       speed_val = 100;
+  //       while (left_sonarsensor_cm > 12.5) {
+  //         straight_x_homing(LEFT);
+  //         left_sonarsensor_cm = read_sonarsensor();
+  //         delay(10);
+  //       }
+  //       stop();
+  //     } else {
+  //       // turn servo 90 deg right
+  //       sensor_servo.write(0);
+  //       delay(1000);
+  //       right_sonarsensor_cm = read_sonarsensor();
+  //       align(RIGHT);
+  //       while (right_sonarsensor_cm > 13.5) {
+  //         straight_x_homing(RIGHT);
+  //         right_sonarsensor_cm = read_sonarsensor();
+  //         delay(10);
+  //       }
+  //       stop();
+  //     }
+  //   // turn servo forward
+  //   sensor_servo.write(90);
+  //   // check front and back distance
+  //   if (home_face = BACK) {
+  //       while (sonarsensor_cm < 170) {
+  //         sonarsensor_cm = read_sonarsensor();
+  //         straight_y_homing(-1);
+  //         delay(10);
+  //       }
+  //   } else {
+  //     while (sonarsensor_cm > 6) {
+  //     straight_y_homing(1);
+  //     sonarsensor_cm = read_sonarsensor(); 
+  //     delay(20);   
+  //   }
+  // }
 
 
   // add in final straight x and y move to make sure in corner
@@ -342,7 +359,6 @@ void loop() {
   }
   // reset gyros
 }
-
 
 
 #ifndef NO_READ_GYRO
@@ -368,15 +384,14 @@ void home(int dir) {
     read_IR_sensors(LEFT);
     home_side = LEFT;
       // go toward left 
-    while (left_sonarsensor_cm > 15 && backleftsensor_cm > 5) {
+    while (left_sonarsensor_cm > 15 && backleftsensor_cm > 7) {
       //if (left_sonarsensor_cm < 25 && backleftsensor_cm < 7) {
       //break;
       //}
       //strafe_left();
       straight_x_homing(LEFT);
-      read_IR_sensors(LEFT);  
+      read_IR_sensors(LEFT); 
       left_sonarsensor_cm = read_sonarsensor();
-     
       delay(50);
     }
     stop();
@@ -384,7 +399,7 @@ void home(int dir) {
   } else {
     read_IR_sensors(RIGHT);
     home_side = RIGHT;
-    while (right_sonarsensor_cm > 15 && backrightsensor_cm > 5) {
+    while (right_sonarsensor_cm > 15 && backrightsensor_cm > 7) { ///was 5 before
       //if (right_sonarsensor_cm <25 && backrightsensor_cm < 12) {
         // break;
       //}
@@ -407,10 +422,22 @@ void align(int dir) {
   float error = 0;
   float error_sum = 0;
   if (dir == LEFT) {
-    error = frontleftsensor_cm - backleftsensor_cm;
-  } else {
-  error = frontrightsensor_cm - backrightsensor_cm;
-  }
+      if (frontleftsensor_cm < 7) {
+        strafe_right();
+        delay(100);
+        stop();
+      }
+      read_IR_sensors(dir);
+      error = frontleftsensor_cm - backleftsensor_cm;
+    } else {
+      if (frontrightsensor_cm < 7) {
+        strafe_left();
+        delay(100);
+        stop();
+      }
+      read_IR_sensors(dir);
+      error = frontrightsensor_cm - backrightsensor_cm;
+    }
   speed_val = 60 + 25.0*abs(error);
 
   // control loop 
@@ -418,7 +445,7 @@ void align(int dir) {
     if (abs(error) < 2) {
       error_sum += abs(error);
     }
-    speed_val = 50 + 27.5*abs(error) + 0*abs(error_sum);
+    speed_val = 60 + 25*abs(error) + 0*abs(error_sum);
 
     // dir 1 = left, 2 = right
     if (dir == LEFT) {
@@ -458,36 +485,34 @@ void align(int dir) {
     }
     
     read_IR_sensors(dir);
-
+    delay(50);    
+    // make sure moves away if too close to wall
+    if (dir == LEFT) {
+      if (frontleftsensor_cm < 7) { /// was backsensor before
+        strafe_right();
+        delay(100); // try making smaller so within 15mm -----------------------
+        stop();
+      }
+      read_IR_sensors(dir);
+      error = frontleftsensor_cm - backleftsensor_cm;
+    } else {
+      if (frontrightsensor_cm < 7) {
+        strafe_left();
+        delay(100);
+        stop();
+      }
+      read_IR_sensors(dir);
+      error = frontrightsensor_cm - backrightsensor_cm;
+    }
+    //************ sometimes bouncing too far so sonar no longer 15 cm from wall************//
     Serial.print("Error: ");
     Serial.println(error);
-    Serial.print("left front 1: ");
-    Serial.println(frontleftsensor_cm);    
-    Serial.print("left back: ");
-    Serial.println(backleftsensor_cm);
-
+    // Serial.print("right front: ");
+    // Serial.println(frontrightsensor_cm);    
+    // Serial.print("right back: ");
+    // Serial.println(backrightsensor_cm);
     delay(50);
-    if (dir == LEFT) {
-      error = frontleftsensor_cm - backleftsensor_cm;
-      // if long range sensor out of range to close to the wall 
-      if (frontleftsensor_cm < 7){
-        //move right 
-        strafe_right();
-        delay(1000);
-        stop();
-      }
-    } else {
-      error = frontrightsensor_cm - backrightsensor_cm;
-      // if long range sensor out of range to close to the wall 
-      if (frontrightsensor_cm < 7){
-        //move right 
-        strafe_left();
-        delay(1000);
-        stop();
-      }
-    }
-    delay(50);
-    
+  
   }
   stop();
   speed_val = 100; // reset speed value after alignment
@@ -656,11 +681,30 @@ void HC_SR04_range() {
 void straight_y_homing(int dir) {
   past_error_y = 0;
   float error = GYRO_reading();
+  float right_side_error = 0;
+  float left_side_error = 0;
   float dif = error + past_error_y;
 
   // float left_g = 200;
   // float right_g = 140;
-  float gain = 150;
+  float gain = 140;
+  float kp_side = 40;
+
+  if (home_side == LEFT) {
+    read_IR_sensors(LEFT);
+    left_side_error = kp_side * (wall_sensor_left - frontleftsensor_cm);
+    right_side_error = 0;
+    // if error is positive, need to turn cw, if error is negative, need to turn ccw
+  } else {
+    read_IR_sensors(RIGHT);
+    right_side_error = kp_side * (wall_sensor_right - frontrightsensor_cm);
+    left_side_error = 0;
+    // if error is positive, need to turn ccw, if error is negative, need to turn cw
+  }
+
+  //cw is add sped val to all motors, 
+  // ccw is subtract speed val to all motors
+  // left side error is pos need to turn cw so add left_side_error to all motors
 
   // float left_correction = abs(dif) * left_g;
   // float right_correction = abs(dif) * right_g;
@@ -669,42 +713,42 @@ void straight_y_homing(int dir) {
   if (dir == 1) { //forward 
     if (dif > 0) {
       // SerialCom->print("positive error");
-      left_front_motor.writeMicroseconds(1500 + speed_val + correction);
-      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-      right_rear_motor.writeMicroseconds(1500 - speed_val); 
-      right_front_motor.writeMicroseconds(1500 - speed_val);
+      left_front_motor.writeMicroseconds(1500 + speed_val + correction + left_side_error - right_side_error);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + correction + left_side_error - right_side_error);
+      right_rear_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error); 
+      right_front_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error);
     } else if (dif < 0) {
       // SerialCom->print("neg error");
-      left_front_motor.writeMicroseconds(1500 + speed_val);
-      left_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_rear_motor.writeMicroseconds(1500 - speed_val - correction);
-      right_front_motor.writeMicroseconds(1500 - speed_val - correction); 
+      left_front_motor.writeMicroseconds(1500 + speed_val + left_side_error - right_side_error);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + left_side_error - right_side_error);
+      right_rear_motor.writeMicroseconds(1500 - speed_val - correction + left_side_error - right_side_error);
+      right_front_motor.writeMicroseconds(1500 - speed_val - correction + left_side_error - right_side_error); 
     } else {
-      left_front_motor.writeMicroseconds(1500 + speed_val);
-      left_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_rear_motor.writeMicroseconds(1500 - speed_val);
-      right_front_motor.writeMicroseconds(1500 - speed_val); 
+      left_front_motor.writeMicroseconds(1500 + speed_val + left_side_error - right_side_error);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + left_side_error - right_side_error);
+      right_rear_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error);
+      right_front_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error); 
     }
   } else if (dir == -1) { //reverse
     if (dif > 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val); 
-      left_rear_motor.writeMicroseconds(1500 - speed_val);
-      right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-      right_front_motor.writeMicroseconds(1500 + speed_val + correction);
+      left_front_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error); 
+      left_rear_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error);
+      right_rear_motor.writeMicroseconds(1500 + speed_val + correction + left_side_error - right_side_error);
+      right_front_motor.writeMicroseconds(1500 + speed_val + correction + left_side_error - right_side_error);
     } else if (dif < 0) {
-      left_front_motor.writeMicroseconds(1500 - speed_val - correction);
-      left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
-      right_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_front_motor.writeMicroseconds(1500 + speed_val);
+      left_front_motor.writeMicroseconds(1500 - speed_val - correction + left_side_error - right_side_error);
+      left_rear_motor.writeMicroseconds(1500 - speed_val - correction + left_side_error - right_side_error); 
+      right_rear_motor.writeMicroseconds(1500 + speed_val - correction + left_side_error - right_side_error);
+      right_front_motor.writeMicroseconds(1500 + speed_val - correction + left_side_error - right_side_error);
 } else {
-      left_front_motor.writeMicroseconds(1500 - speed_val);
-      left_rear_motor.writeMicroseconds(1500 - speed_val); 
-      right_rear_motor.writeMicroseconds(1500 + speed_val);
-      right_front_motor.writeMicroseconds(1500 + speed_val);
+      left_front_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error);
+      left_rear_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error); 
+      right_rear_motor.writeMicroseconds(1500 + speed_val - left_side_error + right_side_error);
+      right_front_motor.writeMicroseconds(1500 + speed_val - left_side_error + right_side_error);
 }
 }
 
-past_error_y = error;
+past_error_y = dif;
 
 }
 
