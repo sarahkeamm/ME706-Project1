@@ -57,7 +57,7 @@ float backrightsensor_cm = 0; // the calculated distance in cm from the back rig
 float sonarsensor_cm = 0; // the calculated distance in cm from the sonar sensor
 float left_sonarsensor_cm = 0; 
 float right_sonarsensor_cm = 0; 
-
+float sonar = 0;
 //---------------------------//
 
 //----------Path Following----------//
@@ -72,6 +72,10 @@ float past_error_y = 0.00;
 float past_error_x = 0.00;
 
 //----------------------------------//
+
+//------------MAPPING---------------//
+  float x_coord = 0;
+  float y_coord = 0;
 
 //----------Finite State Machine----------//
 
@@ -268,6 +272,7 @@ STATE homing() {
         // home towards left wall
         home_side = LEFT;
         home(LEFT);
+        x_coord = left_sonarsensor_cm;
       }
     }
   } else {
@@ -318,9 +323,11 @@ STATE homing() {
         // home towards right wall
         home_side = RIGHT;
         home(RIGHT);
+        x_coord = right_sonarsensor_cm;
+      }
     }   
   }
-  }
+  
 
   // align front/back direction 
 
@@ -350,6 +357,7 @@ STATE homing() {
       straight_y_homing(-1);
       delay(20);
     }
+    y_coord = 180 - sonarsensor_cm;
   } else {
     home_face = FRONT;
     while (sonarsensor_cm > 6) {
@@ -358,6 +366,7 @@ STATE homing() {
     sonarsensor_cm = HC_SR04_range(); 
     delay(20);   
     }
+    y_coord = sonarsensor_cm;
   } 
   speed_val = 100;
   stop();
@@ -384,9 +393,9 @@ STATE homing() {
     run_side = RIGHT;
   }
 
-  Serial.print("home side :");
+  Serial.print("home side: ");
   Serial.print(home_side);
-  Serial.print(" |home face :");
+  Serial.print(" |home face: ");
   Serial.print(home_face);
   Serial.println("             Homed");
 
@@ -394,6 +403,13 @@ STATE homing() {
 
   SerialCom->println("end of homing");
   float x_distance = 0;
+
+// print homing coordinates
+// first coord print
+    SerialCom->print(x_coord);
+    SerialCom->print(", ");
+    SerialCom->print(y_coord);
+    SerialCom->println(";");
 
   return PATH_FOLLOWING;
 }
@@ -531,7 +547,7 @@ STATE path_following(){
     Serial.println(wall_sensor_right);
   }
 
-  // move forwards 
+  // move forwards ? backwards
   if (run_face == FRONT) {
      // turn servo forward
     sensor_servo.write(90);
@@ -539,9 +555,13 @@ STATE path_following(){
     sonarsensor_cm = HC_SR04_range();
     //reverse until the sonar reads value 
       // go backwards 
-      while (sonarsensor_cm < 190) {
+      while (sonarsensor_cm < 170) {
         sonarsensor_cm = HC_SR04_range();
-        straight_y(-1);
+        straight_y(FRONT);
+        SerialCom->print(x_coord);
+        SerialCom->print(", ");
+        SerialCom->print(y_coord);
+        SerialCom->println(";");
         delay(20);
       }
     // swap run_face 
@@ -552,12 +572,17 @@ STATE path_following(){
      // turn servo forward
     sensor_servo.write(90);
     delay(1000);
-    sonarsensor_cm = HC_SR04_range();
-    while (sonarsensor_cm > 6) {
-    //forward();
-    straight_y(1);
-    sonarsensor_cm = HC_SR04_range(); 
-    delay(20);   
+    sonar = HC_SR04_range();
+    while (sonar > 8) {
+      //forward();
+      straight_y(BACK);
+      //sonarsensor_cm = HC_SR04_range(); 
+    // Serial.println(sonarsensor_cm);
+      SerialCom->print(x_coord);
+      SerialCom->print(", ");
+      SerialCom->print(y_coord);
+      SerialCom->println(";");
+      delay(20);   
     }
     // swap run_face, increase run_number  
     run_face = FRONT;
@@ -582,28 +607,52 @@ STATE path_following(){
 
     // if not finished move over, else move to stopped 
     if (home_side == LEFT) {
-    // turn servo 90deg to left and read sonar
-    sensor_servo.write(180);
-    delay(1000);
-    left_sonarsensor_cm = HC_SR04_range();
-    // go left by 10cm
-    while (left_sonarsensor_cm < x_distance) {
-    left_sonarsensor_cm = HC_SR04_range();
-    straight_x(RIGHT);
-    delay(20);
-    } 
+      // turn servo 90deg to left and read sonar
+      sensor_servo.write(180);
+      delay(1000);
+      left_sonarsensor_cm = HC_SR04_range();
+      x_coord = left_sonarsensor_cm;
+      SerialCom->print(x_coord);
+      SerialCom->print(", ");
+      SerialCom->print(y_coord);
+      SerialCom->println(";");
+      // go left by 10cm
+      while (left_sonarsensor_cm < x_distance) {
+        straight_x(RIGHT);
+        left_sonarsensor_cm = HC_SR04_range();
+        delay(20);
+      } 
+      x_coord = left_sonarsensor_cm;
+      SerialCom->print(x_coord);
+      SerialCom->print(", ");
+      SerialCom->print(y_coord);
+      SerialCom->println(";");
     } else {
-    // turn servo 90 deg right
-    sensor_servo.write(0);
-    delay(1000);
-    right_sonarsensor_cm = HC_SR04_range();
-    // go right by 10cm
-    while (right_sonarsensor_cm < x_distance) {
-    right_sonarsensor_cm = HC_SR04_range();
-    straight_x(LEFT);
-    delay(20);
-    } 
-  }
+      // turn servo 90 deg right
+      sensor_servo.write(0);
+      delay(1000);
+      right_sonarsensor_cm = HC_SR04_range();
+      x_coord = right_sonarsensor_cm;
+      SerialCom->print(x_coord);
+      SerialCom->print(", ");
+      SerialCom->print(y_coord);
+      SerialCom->println(";");
+      // go right by 10cm
+      while (right_sonarsensor_cm < x_distance) {
+        straight_x(LEFT);
+        right_sonarsensor_cm = HC_SR04_range();
+        Serial.print("x-distance: ");
+        Serial.print(x_distance);
+        Serial.print("right sonar: ");
+        Serial.println(right_sonarsensor_cm);
+        delay(20);
+      } 
+      x_coord = right_sonarsensor_cm;
+      SerialCom->print(x_coord);
+      SerialCom->print(", ");
+      SerialCom->print(y_coord);
+      SerialCom->println(";");
+    }
   stop();
   delay(50);
   
@@ -767,14 +816,6 @@ void read_IR_sensors(int dir){
   frontleftsensor_cm = 17948*pow(signalADC0,-1.22);
   backleftsensor_cm = 17948*pow(signalADC1,-1.22);
   backleftsensor_cm = backleftsensor_cm / (0.024 * frontleftsensor + 0.86857);
-  // SerialCom->print("frontleftsensor_cm = ");
-  // SerialCom->println(frontleftsensor_cm);
-  // SerialCom->print("backleftsensor_cm = ");
-  // SerialCom->println(backleftsensor_cm);
-  // Serial.print("left front: ");
-  // Serial.println(frontleftsensor_cm);    
-  // Serial.print("left back: ");
-  // Serial.println(backleftsensor_cm);
   } else {
     // right
     for (int i = 0; i < 4; i++) {
@@ -787,14 +828,6 @@ void read_IR_sensors(int dir){
     frontrightsensor_cm = 17948*pow(signalADC2,-1.22);
     backrightsensor_cm = 0.5*17948*pow(signalADC3,-1.22);
     backrightsensor_cm = backrightsensor_cm * (-0.0167* frontrightsensor_cm + 1.0076);
-    // SerialCom->print("frontrightsensor_cm = ");
-    // SerialCom->println(frontrightsensor_cm);
-    // SerialCom->print("backrightsensor_cm = ");
-    // SerialCom->println(backrightsensor_cm);
-    // Serial.print("right front: ");
-    // Serial.println(frontrightsensor_cm);    
-    // Serial.print("right back: ");
-    // Serial.println(backrightsensor_cm);
   }
 
 }
@@ -1103,7 +1136,7 @@ void straight_x(int dir) {
   past_error_x = error;
 }
 
-void straight_y(int dir) {
+void straight_y(int run_face) {
   float error = GYRO_reading();
   float dif = error + past_error_y;
   float right_side_error = 0;
@@ -1116,25 +1149,30 @@ void straight_y(int dir) {
   float kp_side = 30.0;
 
   // trying to sort out code for switching IR sensors 
-  
-  // if (run_number < 2) {
-  //   // for the first 2-ish runs, IR is good 
-  //   extra_power = 0;
-  // } else if (run_number > 2 && run_number < 6) {
-  //    extra_power = 50;
-  // }
-  // else if (run_number == 6) {
-  //   // around half way we can swap what side we are relying on for driving straight 
-  //   if (run_side == LEFT) {
-  //     run_side = RIGHT;
-  //   } else {
-  //     run_side = LEFT;
-  //   }
-    
-  // } else if (run_number > 8) {
-  //   extra_power = 0;
-  //   // use the opposite side wall sensors 
-  // }
+
+  if (run_number < 2) {
+    // for the first 2-ish runs, IR is good 
+    extra_power = 0;
+    speed_val = 150;
+  } else if (run_number == 3) {
+     // extra_power = 50; --------------- might need to add? 
+     kp_side = 10;
+  } else if (run_number == 4) {
+    // around half way we can swap what side we are relying on for driving straight 
+    kp_side = 0;
+    if (run_side == LEFT) {
+      run_side = RIGHT;
+    } else {
+      run_side = LEFT;
+    } 
+  } else if (run_number == 7) {
+    kp_side = 10.0;
+    // use the opposite side wall sensors 
+  } else if (run_number > 7){
+    kp_side = 15;
+  } else {
+    kp_side = 0;
+  }
 
   if (run_side == LEFT) {
   read_IR_sensors(LEFT);
@@ -1148,8 +1186,8 @@ void straight_y(int dir) {
   // if error is positive, need to turn ccw, if error is negative, need to turn cw
   }
 
-  Serial.print("DIR: ");
-  Serial.print(dir);
+  Serial.print("run_face: ");
+  Serial.print(run_face);
   Serial.print(" | run_side: ");
   Serial.print(run_side);
   Serial.print(" | L_err: ");
@@ -1163,68 +1201,85 @@ void straight_y(int dir) {
   Serial.print(" | sonar: ");
   Serial.println(HC_SR04_range());
 
-float sonar = HC_SR04_range();
+  // for now take out acceleration/deceleration
 
- if (dir == 1) { // forward
-  if (sonar <= 45) {
-    speed_val = (2 * sonar) + 80;
-  } else if (sonar >= 138) {
-    speed_val = (-2 * sonar) + 500;
-  } else {
-    speed_val = 150;
-  }
-} else { // reverse
-  // invert logic
-  if (sonar >= 138) {
-    speed_val = (2 * (180 - sonar)) + 80;
-  } else if (sonar <= 45) {
-    speed_val = (-2 * (180 - sonar)) + 500;
-  } else {
-    speed_val = 150;
-  }
-}
+  sonar = HC_SR04_range();
 
-  
+  if (home_side = FRONT){
+    y_coord = sonar;
+  }
+  else{
+    y_coord = 180 - sonar;
+  }
+
+  //  if (dir == 1) { // forward
+  //   if (sonar <= 45) {
+  //     speed_val = (2 * sonar) + 80;
+  //   } else if (sonar >= 138) {
+  //     speed_val = (-2 * sonar) + 500;
+  //   } else {
+  //     speed_val = 150;
+  //   }
+  // } else { // reverse
+  //   // invert logic
+  //   if (sonar >= 138) {
+  //     speed_val = (2 * (180 - sonar)) + 80;
+  //   } else if (sonar <= 45) {
+  //     speed_val = (-2 * (180 - sonar)) + 500;
+  //   } else {
+  //     speed_val = 150;
+  //   }
+  // }
 
  float correction = abs(dif) * gain;
 
- if (dir == 1) { //forward 
-    // if (dif > 0) {
-    //   // SerialCom->print("positive error");
-    //   left_front_motor.writeMicroseconds(1500 + speed_val + correction);
-    //   left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-    //   right_rear_motor.writeMicroseconds(1500 - speed_val); 
-    //   right_front_motor.writeMicroseconds(1500 - speed_val);
-    // } else if (dif < 0) {
-    //   // SerialCom->print("neg error");
-    //   left_front_motor.writeMicroseconds(1500 + speed_val);
-    //   left_rear_motor.writeMicroseconds(1500 + speed_val);
-    //   right_rear_motor.writeMicroseconds(1500 - speed_val - correction );
-    //   right_front_motor.writeMicroseconds(1500 - speed_val - correction); 
-    // } else {
+ if (run_face == BACK) { //forward 
+  if (kp_side == 0) {
+    // rely on gyro
+    if (dif > 0) {
+      // SerialCom->print("positive error");
+      left_front_motor.writeMicroseconds(1500 + speed_val + correction);
+      left_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+      right_rear_motor.writeMicroseconds(1500 - speed_val); 
+      right_front_motor.writeMicroseconds(1500 - speed_val);
+    } else {
+      // SerialCom->print("neg error");
+      left_front_motor.writeMicroseconds(1500 + speed_val);
+      left_rear_motor.writeMicroseconds(1500 + speed_val);
+      right_rear_motor.writeMicroseconds(1500 - speed_val - correction );
+      right_front_motor.writeMicroseconds(1500 - speed_val - correction); 
+    } 
+  } else {
+    // rely on IR sensors 
       left_front_motor.writeMicroseconds(1500 + speed_val + left_side_error - right_side_error);
       left_rear_motor.writeMicroseconds(1500 + speed_val + left_side_error - right_side_error);
       right_rear_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error);
       right_front_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error); 
-   // }
-  } else if (dir == -1) { //reverse
-    // if (dif > 0) {
-    //   left_front_motor.writeMicroseconds(1500 - speed_val); 
-    //   left_rear_motor.writeMicroseconds(1500 - speed_val);
-    //   right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
-    //   right_front_motor.writeMicroseconds(1500 + speed_val + correction);
-    // } else if (dif < 0) {
-    //   left_front_motor.writeMicroseconds(1500 - speed_val - correction);
-    //   left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
-    //   right_rear_motor.writeMicroseconds(1500 + speed_val - correction);
-    //   right_front_motor.writeMicroseconds(1500 + speed_val - correction);
-    // } else {
+    }
+  } else { //reverse
+      if (kp_side == 0) {
+        // rely on gyro
+        if (dif > 0) {
+          left_front_motor.writeMicroseconds(1500 - speed_val); 
+          left_rear_motor.writeMicroseconds(1500 - speed_val);
+          right_rear_motor.writeMicroseconds(1500 + speed_val + correction);
+          right_front_motor.writeMicroseconds(1500 + speed_val + correction);
+        } else {
+          left_front_motor.writeMicroseconds(1500 - speed_val - correction);
+          left_rear_motor.writeMicroseconds(1500 - speed_val - correction); 
+          right_rear_motor.writeMicroseconds(1500 + speed_val - correction);
+          right_front_motor.writeMicroseconds(1500 + speed_val - correction);
+        }
+    } else {
       left_front_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error);
       left_rear_motor.writeMicroseconds(1500 - speed_val + left_side_error - right_side_error); 
       right_rear_motor.writeMicroseconds(1500 + speed_val - left_side_error + right_side_error);
       right_front_motor.writeMicroseconds(1500 + speed_val - left_side_error + right_side_error);
-    // }
+    }
   }
 
   past_error_y = dif; 
 }
+  
+
+ 
