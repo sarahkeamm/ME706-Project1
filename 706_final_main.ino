@@ -1165,7 +1165,9 @@ void straight_y(int run_face) {
   speed_val = 200;
   // trying to sort out code for switching IR sensors 
 
-  if (run_number > 0 && run_number < 3) {
+  if (run_number == 0){
+    kp = 30;
+  } else if (run_number > 0 && run_number < 3) {
     // for the first 2-ish runs, IR is good 
     extra_power = 0;
     kp_side = 10;
