@@ -270,7 +270,7 @@ STATE homing() {
   // } 
   stop();
 
-  home(RIGHT);
+  // home(RIGHT);
 
   // initialise path following
 
@@ -364,7 +364,7 @@ STATE path_following(){
   if (kp_side == 0) {
   // relying on gyro therefore align to front before move over 
   if (run_face == FRONT) {
-    // align_to_wall_sonar();
+    align_to_wall_sonar();
   } else {
     // jam into the wall a little bit 
       sensor_servo.write(90);
@@ -892,7 +892,7 @@ void align_to_wall_sonar() {
 
   float dist_left, dist_right;
   float error, prev_error = 0;
-  const float ALIGNED_THRESHOLD = 0.05;
+  const float ALIGNED_THRESHOLD = 0.07;
   const int   MAX_ITERATIONS    = 15;
   int iterations = 0;
 
