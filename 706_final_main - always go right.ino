@@ -192,185 +192,88 @@ STATE initialising(){
 
 
 STATE homing() {
-
-
   // initial scan
-    // turn servo forward
-    sensor_servo.write(90);
-    SerialCom->println("homing");
+  // turn servo forward
+  sensor_servo.write(90);
+  SerialCom->println("homing");
+  delay(250);
+  sonarsensor_cm = HC_SR04_range();
+  delay(50); 
 
+  // turn servo 90deg to right and read sonar
+  sensor_servo.write(0);
+  delay(250);
+  right_sonarsensor_cm = HC_SR04_range();
+  // Serial.print("right sonar");
+  Serial.println( right_sonarsensor_cm);
+  delay(50); 
 
+  // safety check 
+  if (sonarsensor_cm < 20 && right_sonarsensor_cm > 15) {
+    speed_val = 150;
+    reverse();
+    speed_val = 100;
+    delay(500);
+    stop();
+  } 
 
-    delay(250);
-    sonarsensor_cm = HC_SR04_range();
+  // turn servo 90 deg right
+  sensor_servo.write(0);
+  delay(250);
+  right_sonarsensor_cm = HC_SR04_range();
+  home_side = RIGHT;
+  home(RIGHT);
+  delay(50);
 
-    // turn servo 90deg to left and read sonar
-    sensor_servo.write(180);
-    delay(250);
-    left_sonarsensor_cm = HC_SR04_range();
-    // Serial.print("left sonar");
-    // Serial.println(left_sonarsensor_cm );
-    delay(50); 
-
-    // turn servo 90deg to right and read sonar
-    sensor_servo.write(0);
-    delay(250);
-    right_sonarsensor_cm = HC_SR04_range();
-    // Serial.print("right sonar");
-    // Serial.println( right_sonarsensor_cm);
-    delay(50); 
-
-  /*
-  if (right_sonarsensor_cm >left_sonarsensor_cm) {
-    // If right is further than left, align to left wall first
-  
-    // safety check 
-    if (sonarsensor_cm < 20 && left_sonarsensor_cm > 15) {
-      speed_val = 150;
-      reverse();
-      speed_val = 100; // ???
-      delay(1000);
-      stop();
-      SerialCom->println("inside safety 1");
-    } 
-
-    // turn servo 90 deg left
-    sensor_servo.write(180);
-    delay(250);
-    left_sonarsensor_cm = HC_SR04_range();
-
-    // home towards left wall
-    home(LEFT);
-    x_coord = frontleftsensor_cm;
-    delay(50);
-
-    // check if aligned to correct wall
-    // rotate servo 90 deg to right and read sonar
-    sensor_servo.write(0);
-    delay(250);
-    right_sonarsensor_cm = HC_SR04_range();
-
-    if (right_sonarsensor_cm > 120) {
-      // Aligned to short wall on left side
-      SerialCom->println("Aligned to short left wall");
-
-      // rotate robot 90 deg 
-      cw();
-      delay(2500);
-      stop();
-      
-      right_sonarsensor_cm = HC_SR04_range();
-      delay(10); 
-
-      // align to closest wall 
-      if (right_sonarsensor_cm < 50) {
-        // align to the right 
-        home_side = RIGHT;
-        home(RIGHT);
-        x_coord = frontrightsensor_cm;
-      } else {
-        // align to the left
-        // turn servo 90 deg left 
-        sensor_servo.write(180);
-        left_sonarsensor_cm = HC_SR04_range();
-        // home towards left wall
-        home_side = LEFT;
-        home(LEFT);
-        x_coord = frontleftsensor_cm;
-      }
-    }
-  } else {
-    */
-    // If left is further than right, align to right wall first
-
-    // safety check 
-    if (sonarsensor_cm < 20 && right_sonarsensor_cm > 15) {
-      speed_val = 150;
-      reverse();
-      speed_val = 100;
-      delay(500);
-      stop();
-    } 
-
+  // check if aligned to correct wall
+  // rotate servo 90 deg to left and read sonar
+  sensor_servo.write(180);
+  delay(250);
+  left_sonarsensor_cm = HC_SR04_range();
+  if (left_sonarsensor_cm > 120) { // if aligned to short wall
+    SerialCom->println("Aligned to short right wall");
+    cw();   // rotate robot ~ 90 deg 
+    delay(2500);
+    stop();
+    
     // turn servo 90 deg right
     sensor_servo.write(0);
     delay(250);
     right_sonarsensor_cm = HC_SR04_range();
-    // home towards right wall
     home_side = RIGHT;
     home(RIGHT);
-    x_coord = frontrightsensor_cm;
-    delay(50);
-
-    // check if aligned to correct wall
-    // rotate servo 90 deg to left and read sonar
-    sensor_servo.write(180);
-    delay(250);
-    left_sonarsensor_cm = HC_SR04_range();
-    if (left_sonarsensor_cm > 120) {
-     // if true aligned on short wall
-      SerialCom->println("Aligned to short right wall");
-      // rotate robot ~ 90 deg 
-      cw();
-      delay(2500);
-      stop();
-     
-      // turn servo 90 deg right
-      sensor_servo.write(0);
-      delay(250);
-      right_sonarsensor_cm = HC_SR04_range();
-      // home towards right wall
-        
-      home_side = RIGHT;
-      home(RIGHT);
-      x_coord = frontrightsensor_cm;
-
-    }   
-  
+  }   
 
   // align front/back direction 
-
-  
-  read_IR_sensors(RIGHT);
-  wall_sensor_right = frontrightsensor_cm;
-
   // turn servo forward
   sensor_servo.write(90);
   delay(250);
   sonarsensor_cm = HC_SR04_range();
-  // SerialCom->println(" distance from far wall: ");
-  // SerialCom->println(sonarsensor_cm);
   
   speed_val = 150;
   if (sonarsensor_cm > 110) {
-    home_face = BACK;
     while (sonarsensor_cm < 170) {
-      //Serial.print(" distance from far wall: ");
-      //Serial.println(sonarsensor_cm);
       sonarsensor_cm = HC_SR04_range();
-      //reverse();
       delay(60);
-      straight_y_homing(-1);
+      straight_y_homing(-1);  // reverse
     }
+    home_face = BACK;
     y_coord = 180 - sonarsensor_cm;
   } else {
-    home_face = FRONT;
     while (sonarsensor_cm > 6) {
-    //forward();
     sonarsensor_cm = HC_SR04_range(); 
     delay(60); 
-    straight_y_homing(1);  
+    straight_y_homing(1);   // forward
     }
+    home_face = FRONT;
     y_coord = sonarsensor_cm;
   } 
-  speed_val = 100;
   stop();
+
+  // initialise path following
 
   past_error_x = 0;
   past_error_y = 0;
-  run_side = home_side;
-  
-    // reset gyros
 
   if (home_face == FRONT) {
     y_dir = -1;
@@ -380,34 +283,21 @@ STATE homing() {
     y_dir = 1;
   }
 
-  // if (home_side == LEFT) {
-  //   x_dir = -1;
-  //   run_side = LEFT;
-  // } else if (home_side == RIGHT) {
-  //   x_dir = 1;
-  //   run_side = RIGHT;
-  // }
+  home_side = RIGHT;
+  x_dir = 1;
+  run_side = RIGHT;
 
-    home_side = RIGHT;
-    x_dir = 1;
-    run_side = RIGHT;
-
-  Serial.print("home side: ");
-  Serial.print(home_side);
-  Serial.print(" |home face: ");
-  Serial.print(home_face);
-  Serial.println("             Homed");
-
-  
+  read_IR_sensors(RIGHT);
+  wall_sensor_right = frontrightsensor_cm;
+  x_coord = frontrightsensor_cm + 7.25;
 
   SerialCom->println("end of homing");
 
   // print homing coordinates
-  // first coord print
-    SerialCom->print(x_coord);
-    SerialCom->print(", ");
-    SerialCom->print(y_coord);
-    SerialCom->println(";");
+  SerialCom->print(x_coord);
+  SerialCom->print(", ");
+  SerialCom->print(y_coord);
+  SerialCom->println(";");
 
   return PATH_FOLLOWING;
 }
@@ -501,7 +391,7 @@ STATE path_following(){
     sensor_servo.write(90);
     delay(250);
     sonar = HC_SR04_range();
-    while (sonar > 13) {
+    while (sonar > 12) {
       straight_y(BACK);
       //sonarsensor_cm = HC_SR04_range(); 
       // Serial.println(sonarsensor_cm);
@@ -524,8 +414,6 @@ STATE path_following(){
  delay(20);
  run_number++;
   
-  // move left and right 
-  
   // increase the x_distance
   x_distance = x_distance + 10;
 
@@ -537,61 +425,34 @@ STATE path_following(){
     return STOPPED;
   }
 
-    // if not finished move over, else move to stopped 
-   
-    // if (home_side == LEFT) {
-    //   SerialCom->println("Moving sideways");
-    //   // turn servo 90deg to left and read sonar
-    //   sensor_servo.write(180);
-    //   delay(250);
-    //   left_sonarsensor_cm = HC_SR04_range();
-    //   // x_coord = left_sonarsensor_cm;
-    //   // SerialCom->print(x_coord);
-    //   // SerialCom->print(", ");
-    //   // SerialCom->print(y_coord);
-    //   // SerialCom->println(";");
-    //   // go left by 10cm
-    //   while (left_sonarsensor_cm < x_distance) {
-    //     straight_x(RIGHT);
-    //     left_sonarsensor_cm = HC_SR04_range();
-    //     delay(60);
-    //   } 
-    //   // x_coord = left_sonarsensor_cm;
-    //   // SerialCom->print(x_coord);
-    //   // SerialCom->print(", ");
-    //   // SerialCom->print(y_coord);
-    //   // SerialCom->println(";");
-    // } 
-    // else {
+  // turn servo 90 deg right
+  sensor_servo.write(0);
+  delay(250);
+  right_sonarsensor_cm = HC_SR04_range();
+  x_coord = right_sonarsensor_cm;
 
-
-      // turn servo 90 deg right
-      sensor_servo.write(0);
-      delay(250);
-      right_sonarsensor_cm = HC_SR04_range();
-      x_coord = right_sonarsensor_cm;
-
-      SerialCom->print(x_coord);
-      SerialCom->print(", ");
-      SerialCom->print(y_coord);
-      SerialCom->println(";");
-      // go right by 10cm
-      while (right_sonarsensor_cm < x_distance) {
-        straight_x(LEFT);
-        right_sonarsensor_cm = HC_SR04_range();
-        Serial.print("x-distance: ");
-        Serial.print(x_distance);
-        Serial.print("right sonar: ");
-        Serial.println(right_sonarsensor_cm);
-        delay(60);
-      } 
-      x_coord = right_sonarsensor_cm;
-      SerialCom->print(x_coord);
-      SerialCom->print(", ");
-      SerialCom->print(y_coord);
-      SerialCom->println(";");
-    //}
+  SerialCom->print(x_coord);
+  SerialCom->print(", ");
+  SerialCom->print(y_coord);
+  SerialCom->println(";");
+  // go right by 10cm
+  while (right_sonarsensor_cm < x_distance) {
+    straight_x(LEFT);
+    right_sonarsensor_cm = HC_SR04_range();
+    SerialCom->print("x-distance: ");
+    SerialCom->print(x_distance);
+    SerialCom->print("right sonar: ");
+    SerialCom->println(right_sonarsensor_cm);
+    delay(20);
+  } 
   stop();
+  x_coord = right_sonarsensor_cm;
+  SerialCom->print(x_coord);
+  SerialCom->print(", ");
+  SerialCom->print(y_coord);
+  SerialCom->println(";");
+    //}
+  
   delay(20);
   
   return PATH_FOLLOWING;
@@ -601,16 +462,13 @@ STATE path_following(){
 
 
 void home(int dir) {
+  Serial.println("in home right");
   speed_val = 150;
   if (dir == LEFT) {
     read_IR_sensors(LEFT);
     home_side = LEFT;
       // go toward left 
     while (left_sonarsensor_cm > 15 && backleftsensor_cm > 7) {
-      //if (left_sonarsensor_cm < 25 && backleftsensor_cm < 7) {
-      //break;
-      //}
-      //strafe_left();
       straight_x(LEFT);
       read_IR_sensors(LEFT); 
       left_sonarsensor_cm = HC_SR04_range();
@@ -619,19 +477,20 @@ void home(int dir) {
     stop();
     align(LEFT);
   } else {
+    while (right_sonarsensor_cm > 30){
+      straight_x(RIGHT);
+      right_sonarsensor_cm = HC_SR04_range();
+    }
+    stop();
     read_IR_sensors(RIGHT);
-    home_side = RIGHT;
     while (right_sonarsensor_cm > 15 && backrightsensor_cm > 7) { ///was 5 before
-      //if (right_sonarsensor_cm <25 && backrightsensor_cm < 12) {
-        // break;
-      //}
-      //strafe_right();
       straight_x(RIGHT);
       read_IR_sensors(RIGHT);
       right_sonarsensor_cm = HC_SR04_range();
       delay(50);
     }
     stop();
+    home_side = RIGHT;
     align(RIGHT);
   }
   speed_val = 100;
@@ -1007,7 +866,7 @@ void align_to_wall_sonar() {
   delay(250);
   float dist_centre = HC_SR04_range();
 
-  int sweep_angle = 15;
+  int sweep_angle = 20;
 
   do {
     sensor_servo.write(centre_angle + sweep_angle);
@@ -1025,7 +884,7 @@ void align_to_wall_sonar() {
 
     error = dist_left - dist_right;
 
-    float kp = 180;
+    float kp = 190;
     float kd = 0;
     float derivative = error - prev_error;
     speed_val = constrain(
@@ -1139,7 +998,7 @@ void straight_x(int dir) {
     }
   } 
 
-  past_error_x = dif;
+  past_error_x = error;
   past_error_y = dif;
 }
 
@@ -1162,15 +1021,15 @@ void straight_y(int run_face) {
   read_IR_sensors(LEFT);
   left_side_error = kp_side * (wall_sensor_left - frontleftsensor_cm);
   right_side_error = 0;
-  SerialCom->print("left error: ");
-  SerialCom->println(left_side_error);
+  // SerialCom->print("left error: ");
+  // SerialCom->println(left_side_error);
   // if error is positive, need to turn cw, if error is negative, need to turn ccw
   } else {
   read_IR_sensors(RIGHT);
   right_side_error = kp_side * (wall_sensor_right - frontrightsensor_cm);
   left_side_error = 0;
-  SerialCom->print("right error: ");
-  SerialCom->println(right_side_error);
+  // SerialCom->print("right error: ");
+  // SerialCom->println(right_side_error);
   // if error is positive, need to turn ccw, if error is negative, need to turn cw
   }
 
@@ -1232,9 +1091,9 @@ void straight_y(int run_face) {
   //   }
   // } else {
      if (run_side == RIGHT) {
-      x_coord = frontrightsensor_cm;
+      x_coord = frontrightsensor_cm + 7.25;
     } else {
-      x_coord = 120 - frontleftsensor_cm;
+      x_coord = 120 - frontleftsensor_cm + 7.25;
     }
   //}
 
