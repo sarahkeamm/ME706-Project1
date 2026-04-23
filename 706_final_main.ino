@@ -1084,7 +1084,7 @@ void straight_x(int dir) {
       right_front_motor.writeMicroseconds(1500 - speed_val);
     }
   } 
-
+  past_error_x = error;
   past_error_y = dif;
 }
 
