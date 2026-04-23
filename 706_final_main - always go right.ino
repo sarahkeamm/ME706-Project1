@@ -401,7 +401,6 @@ STATE homing() {
   
 
   SerialCom->println("end of homing");
-  float x_distance = 15;
 
   // print homing coordinates
   // first coord print
@@ -502,7 +501,7 @@ STATE path_following(){
     sensor_servo.write(90);
     delay(250);
     sonar = HC_SR04_range();
-    while (sonar > 15) {
+    while (sonar > 13) {
       straight_y(BACK);
       //sonarsensor_cm = HC_SR04_range(); 
       // Serial.println(sonarsensor_cm);
@@ -998,7 +997,7 @@ void align_to_wall_sonar() {
 
   float dist_left, dist_right;
   float error, prev_error = 0;
-  const float ALIGNED_THRESHOLD = 1.0;
+  const float ALIGNED_THRESHOLD = 0.05;
   const int   MAX_ITERATIONS    = 50;
   int iterations = 0;
 
@@ -1008,14 +1007,7 @@ void align_to_wall_sonar() {
   delay(250);
   float dist_centre = HC_SR04_range();
 
-  int sweep_angle;
-  if (dist_centre < 40) {
-    sweep_angle = 25;
-  } else if (dist_centre < 100) {
-    sweep_angle = 25;
-  } else {
-    sweep_angle = 25;
-  }
+  int sweep_angle = 15;
 
   do {
     sensor_servo.write(centre_angle + sweep_angle);
@@ -1033,7 +1025,7 @@ void align_to_wall_sonar() {
 
     error = dist_left - dist_right;
 
-    float kp = 150;
+    float kp = 180;
     float kd = 0;
     float derivative = error - prev_error;
     speed_val = constrain(
@@ -1046,7 +1038,7 @@ void align_to_wall_sonar() {
       break;
     }
     
-    (error < 0) ? cw() : ccw();
+    (error > 0) ? cw() : ccw();
 
 
     delay(70);
@@ -1099,7 +1091,9 @@ void straight_y_homing(int dir) {
 }
 
 void straight_x(int dir) {
+  if (machine_state == HOMING) {
     past_error_x = 0;
+  }
     float error = GYRO_reading();
     float dif = error + past_error_x;
 
@@ -1145,7 +1139,7 @@ void straight_x(int dir) {
     }
   } 
 
-  past_error_x = error;
+  past_error_x = dif;
   past_error_y = dif;
 }
 
