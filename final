@@ -137,7 +137,7 @@ void setup(void) {
   SerialCom = &Serial1;
   SerialCom->begin(115200);
   SerialCom->println("MECHENG706_Base_Code");
-  delay(1000);
+  delay(50);
 }
 
 
@@ -361,21 +361,23 @@ STATE path_following(){
     kp_side = 0;
   }
 
-  if (kp_side == 0) {
-  // relying on gyro therefore align to front before move over 
-  if (run_face == FRONT) {
-    align_to_wall_sonar();
-  } else {
+  // if (kp_side == 0) {
+  // // relying on gyro therefore align to front before move over 
+  //   if (run_face == FRONT) {
+  //     align_to_wall_sonar();
+  //   }
+  // } 
+  if (run_face == BACK) {
     // jam into the wall a little bit 
-      sensor_servo.write(90);
-    delay(250)
-;    while (sonar < 173) {
-      straight_y(FRONT);
-      delay(20);
-    }
+    sensor_servo.write(90);
+    delay(250);    
+    
+    straight_y(FRONT);
+    delay(250);
+    
     stop();
   }
-  }
+  
 
  
   read_IR_sensors(run_side);
@@ -397,6 +399,8 @@ STATE path_following(){
     delay(250);
     sonar = HC_SR04_range();
     //reverse until the sonar reads value 
+    straight_y(BACK);
+    delay(250);
       // go backwards 
       while (sonar < 160) {
         straight_y(FRONT);
@@ -420,7 +424,7 @@ STATE path_following(){
     sensor_servo.write(90);
     delay(250);
     sonar = HC_SR04_range();
-    delay(60);   
+    delay(60); 
 
     while (sonar > 15) {
       straight_y(BACK);
@@ -471,14 +475,26 @@ STATE path_following(){
     delay(500);
     stop();
   } else {
-  while (right_sonarsensor_cm < x_distance) {
-    straight_x(LEFT);
-    right_sonarsensor_cm = HC_SR04_range();
-    // SerialCom->print("x-distance: ");
-    // SerialCom->print(x_distance);
-    // SerialCom->print("right sonar: ");
-    // SerialCom->println(right_sonarsensor_cm);
-    delay(20);
+ while (right_sonarsensor_cm < x_distance || right_sonarsensor_cm > x_distance + 5 ) {
+    if (right_sonarsensor_cm < x_distance){
+      speed_val = 100;
+      straight_x(LEFT);
+      right_sonarsensor_cm = HC_SR04_range();
+      //SerialCom->print("x-distance: ");
+      //SerialCom->print(x_distance);
+      //SerialCom->print("right sonar: ");
+      //SerialCom->println(right_sonarsensor_cm);
+      delay(60);
+    }
+    else{
+      speed_val = 100;
+      straight_x(RIGHT);
+      right_sonarsensor_cm = HC_SR04_range();
+      //SerialCom->print("x-distance: ");
+      //SerialCom->print(x_distance);
+      //SerialCom->print("right sonar: ");
+      //SerialCom->println(right_sonarsensor_cm);
+    }
   } 
   }
   stop();
@@ -892,9 +908,10 @@ void align_to_wall_sonar() {
 
   float dist_left, dist_right;
   float error, prev_error = 0;
-  const float ALIGNED_THRESHOLD = 0.07;
+  const float ALIGNED_THRESHOLD = 0.05;
   const int   MAX_ITERATIONS    = 15;
   int iterations = 0;
+  speed_val = 175;
 
   int centre_angle = 90;
 
@@ -1046,7 +1063,7 @@ void straight_y(int run_face) {
 
   // float left_g = 200;
   // float right_g = 140;
-  float gain = 250;
+  float gain = 150;
   speed_val = 250;
   // trying to sort out code for switching IR sensors 
 
