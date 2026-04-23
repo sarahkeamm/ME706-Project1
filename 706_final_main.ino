@@ -488,7 +488,7 @@ STATE path_following(){
      // turn servo forward
     SerialCom->println("Moving backward");
     sensor_servo.write(90);
-    delay(1000);
+    delay(250);
     sonar = HC_SR04_range();
     //reverse until the sonar reads value 
       // go backwards 
@@ -501,7 +501,7 @@ STATE path_following(){
           SerialCom->println(";");
        }
       coord_count = coord_count + 1;
-        delay(20);
+      delay(60);
       }
       coord_count = 1;
     // swap run_face 
@@ -512,7 +512,7 @@ STATE path_following(){
     // go forwards 
      // turn servo forward
     sensor_servo.write(90);
-    delay(1000);
+    delay(250);
     sonar = HC_SR04_range();
     while (sonar > 15) {
       straight_y(BACK);
@@ -525,7 +525,7 @@ STATE path_following(){
         SerialCom->println(";");
      }
      coord_count = coord_count + 1;
-      delay(20);   
+      delay(60);   
     }
     coord_count = 1;
     // swap run_face, increase run_number  
@@ -534,7 +534,7 @@ STATE path_following(){
   }
  // increase run_number
  stop();
- delay(50);
+ delay(20);
  run_number++;
   
   // move left and right 
@@ -556,7 +556,7 @@ STATE path_following(){
       SerialCom->println("Moving sideways");
       // turn servo 90deg to left and read sonar
       sensor_servo.write(180);
-      delay(1000);
+      delay(250);
       left_sonarsensor_cm = HC_SR04_range();
       // x_coord = left_sonarsensor_cm;
       // SerialCom->print(x_coord);
@@ -567,7 +567,7 @@ STATE path_following(){
       while (left_sonarsensor_cm < x_distance) {
         straight_x(RIGHT);
         left_sonarsensor_cm = HC_SR04_range();
-        delay(20);
+        delay(60);
       } 
       // x_coord = left_sonarsensor_cm;
       // SerialCom->print(x_coord);
@@ -578,7 +578,7 @@ STATE path_following(){
     else {
       // turn servo 90 deg right
       sensor_servo.write(0);
-      delay(1000);
+      delay(250);
       right_sonarsensor_cm = HC_SR04_range();
       x_coord = right_sonarsensor_cm;
       SerialCom->print(x_coord);
@@ -593,7 +593,7 @@ STATE path_following(){
         Serial.print(x_distance);
         Serial.print("right sonar: ");
         Serial.println(right_sonarsensor_cm);
-        delay(20);
+        delay(60);
       } 
       x_coord = right_sonarsensor_cm;
       SerialCom->print(x_coord);
@@ -602,7 +602,7 @@ STATE path_following(){
       SerialCom->println(";");
     }
   stop();
-  delay(50);
+  delay(20);
   
   return PATH_FOLLOWING;
 }
@@ -1083,7 +1083,7 @@ void straight_x(int dir) {
       right_front_motor.writeMicroseconds(1500 - speed_val);
     }
   } 
-  past_error_x = error;
+  past_error_x = dif;
   past_error_y = dif;
 }
 
