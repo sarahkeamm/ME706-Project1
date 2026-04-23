@@ -352,12 +352,12 @@ STATE path_following(){
   read_IR_sensors(run_side);
   if (run_side == LEFT) {
     wall_sensor_left = frontleftsensor_cm;
-    Serial.print("Set wall_sensor_left: ");
-    Serial.println(wall_sensor_left);
+    // Serial.print("Set wall_sensor_left: ");
+    // Serial.println(wall_sensor_left);
   } else {
     wall_sensor_right = frontrightsensor_cm;
-    Serial.print("Set wall_sensor_right: ");
-    Serial.println(wall_sensor_right);
+    // Serial.print("Set wall_sensor_right: ");
+    // Serial.println(wall_sensor_right);
   }
 
   // move forwards ? backwards
@@ -415,8 +415,9 @@ STATE path_following(){
  run_number++;
   
   // increase the x_distance
+  if (run_number > 1) {
   x_distance = x_distance + 10;
-
+  }
 
   // check if finished,
   if (x_distance > 110) {
@@ -439,10 +440,10 @@ STATE path_following(){
   while (right_sonarsensor_cm < x_distance) {
     straight_x(LEFT);
     right_sonarsensor_cm = HC_SR04_range();
-    SerialCom->print("x-distance: ");
-    SerialCom->print(x_distance);
-    SerialCom->print("right sonar: ");
-    SerialCom->println(right_sonarsensor_cm);
+    // SerialCom->print("x-distance: ");
+    // SerialCom->print(x_distance);
+    // SerialCom->print("right sonar: ");
+    // SerialCom->println(right_sonarsensor_cm);
     delay(60);
   } 
   stop();
