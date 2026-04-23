@@ -100,45 +100,54 @@ void align_to_wall_sonar() {
 
   float dist_left, dist_right;
   float error, prev_error = 0;
-
-  const float ALIGNED_THRESHOLD = 1.0;
-  const int MAX_ITERATIONS = 50;
-
-  int centre_angle = 90;
-  int sweep_angle = 15;
+  const float ALIGNED_THRESHOLD = 0.05;
+  const int   MAX_ITERATIONS    = 50;
   int iterations = 0;
 
+  int centre_angle = 90;
+
   sensor_servo.write(centre_angle);
-  delay(300);
+  delay(250);
+  float dist_centre = HC_SR04_range();
+
+  int sweep_angle = 15;
 
   do {
     sensor_servo.write(centre_angle + sweep_angle);
-    delay(300);
+    delay(200);
     dist_left = HC_SR04_range();
 
     sensor_servo.write(centre_angle - sweep_angle);
-    delay(300);
+    delay(200);
     dist_right = HC_SR04_range();
+
+    if (dist_left > 220 || dist_right > 220) {
+      SerialCom->println("Align sonar: reading out of range, skipping");
+      break;
+    }
 
     error = dist_left - dist_right;
 
-    SerialCom->print("L: ");
-    SerialCom->print(dist_left);
-    SerialCom->print(" R: ");
-    SerialCom->print(dist_right);
-    SerialCom->print(" Error: ");
-    SerialCom->println(error);
+    float kp = 180;
+    float kd = 0;
+    float derivative = error - prev_error;
+    speed_val = constrain(
+      (int)(kp * abs(error) + kd * abs(derivative)),
+      85,
+      200
+    );
 
-    float kp = 5;
-    speed_val = constrain((kp * abs(error)), 80, 130);
-
-    if (abs(error) <= ALIGNED_THRESHOLD) break;
-
+    if (abs(error) <= ALIGNED_THRESHOLD) {
+      SerialCom->println("ALIGNED");
+      break;
+    }
+    
     (error > 0) ? cw() : ccw();
 
-    delay(80);
+
+    delay(70);
     stop();
-    delay(100);
+    delay(60);
 
     prev_error = error;
     iterations++;
@@ -147,7 +156,6 @@ void align_to_wall_sonar() {
 
   stop();
   sensor_servo.write(90);
-  delay(300);
-
-  SerialCom->println("Alignment complete");
+  delay(200);
+  speed_val = 100;
 }
