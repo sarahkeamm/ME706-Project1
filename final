@@ -296,7 +296,7 @@ STATE homing() {
 
   read_IR_sensors(RIGHT);
   wall_sensor_right = frontrightsensor_cm;
-  x_coord = frontrightsensor_cm + 7.25;
+  x_coord = frontrightsensor_cm;
 
   SerialCom->println("end of homing");
 
@@ -893,7 +893,7 @@ void align_to_wall_sonar() {
   float dist_left, dist_right;
   float error, prev_error = 0;
   const float ALIGNED_THRESHOLD = 0.05;
-  const int   MAX_ITERATIONS    = 50;
+  const int   MAX_ITERATIONS    = 15;
   int iterations = 0;
 
   int centre_angle = 90;
@@ -920,7 +920,7 @@ void align_to_wall_sonar() {
 
     error = dist_left - dist_right;
 
-    float kp = 190;
+    float kp = 180;
     float kd = 0;
     float derivative = error - prev_error;
     speed_val = constrain(
@@ -1129,9 +1129,9 @@ void straight_y(int run_face) {
   //   }
   // } else {
      if (run_side == RIGHT) {
-      x_coord = frontrightsensor_cm + 7.25;
+      x_coord = frontrightsensor_cm;
     } else {
-      x_coord = 120 - frontleftsensor_cm + 7.25;
+      x_coord = 120 - frontleftsensor_cm;
     }
   //}
 
