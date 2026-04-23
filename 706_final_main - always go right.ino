@@ -185,8 +185,7 @@ STATE initialising(){
   
   SerialCom->println("init");
 
-
-  delay(500);
+  delay(100);
   return HOMING;
 }
 
@@ -307,13 +306,22 @@ STATE path_following(){
   if (run_number == 0){
     // should now always start on right wall
       if (run_face == FRONT) {
-         kp_side = 10;
+         kp_side = 8;
       } else {
          kp_side = 30;
       }
-  } else if (run_number > 0 && run_number < 3) {
-    // for the first 2-ish runs, IR is good 
-    kp_side = 10;
+  } else if (run_number == 1) {
+      if (run_face == FRONT) {
+         kp_side = 4.5;
+      } else {
+         kp_side = 20;
+      }
+  } else if (run_number == 2) {
+    if (run_face == FRONT) {
+         kp_side = 4;
+      } else {
+         kp_side = 8;
+      }
   } else if (run_number == 3) {
      // extra_power = 50; --------------- might need to add? 
      kp_side = 0;
@@ -391,7 +399,7 @@ STATE path_following(){
     sensor_servo.write(90);
     delay(250);
     sonar = HC_SR04_range();
-    while (sonar > 12) {
+    while (sonar > 15) {
       straight_y(BACK);
       //sonarsensor_cm = HC_SR04_range(); 
       // Serial.println(sonarsensor_cm);
@@ -413,7 +421,7 @@ STATE path_following(){
  stop();
  delay(20);
  run_number++;
-  
+
   // increase the x_distance
   if (run_number > 1) {
   x_distance = x_distance + 10;
@@ -1032,6 +1040,9 @@ void straight_y(int run_face) {
   // SerialCom->print("right error: ");
   // SerialCom->println(right_side_error);
   // if error is positive, need to turn ccw, if error is negative, need to turn cw
+  // Serial.print("right error: ");
+  // Serial.println(right_side_error/kp_side);
+  delay(60);
   }
 
 
@@ -1099,6 +1110,7 @@ void straight_y(int run_face) {
   //}
 
   sonar = HC_SR04_range();
+  delay(60);
 
   if (home_face == FRONT){
     y_coord = sonar;
