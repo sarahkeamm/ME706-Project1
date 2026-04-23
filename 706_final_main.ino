@@ -201,12 +201,12 @@ STATE homing() {
 
 
 
-    delay(1000);
+    delay(250);
     sonarsensor_cm = HC_SR04_range();
 
     // turn servo 90deg to left and read sonar
     sensor_servo.write(180);
-    delay(1000);
+    delay(250);
     left_sonarsensor_cm = HC_SR04_range();
     // Serial.print("left sonar");
     // Serial.println(left_sonarsensor_cm );
@@ -214,11 +214,11 @@ STATE homing() {
 
     // turn servo 90deg to right and read sonar
     sensor_servo.write(0);
-    delay(1000);
+    delay(250);
     right_sonarsensor_cm = HC_SR04_range();
     // Serial.print("right sonar");
     // Serial.println( right_sonarsensor_cm);
-    delay(100); 
+    delay(50); 
 
 
   if (right_sonarsensor_cm >left_sonarsensor_cm) {
@@ -236,7 +236,7 @@ STATE homing() {
 
     // turn servo 90 deg left
     sensor_servo.write(180);
-    delay(1000);
+    delay(250);
     left_sonarsensor_cm = HC_SR04_range();
 
     // home towards left wall
@@ -246,7 +246,7 @@ STATE homing() {
     // check if aligned to correct wall
     // rotate servo 90 deg to right and read sonar
     sensor_servo.write(0);
-    delay(1000);
+    delay(250);
     right_sonarsensor_cm = HC_SR04_range();
 
     if (right_sonarsensor_cm > 120) {
@@ -292,7 +292,7 @@ STATE homing() {
 
     // turn servo 90 deg right
     sensor_servo.write(0);
-    delay(1000);
+    delay(250);
     right_sonarsensor_cm = HC_SR04_range();
     // home towards right wall
     home_side = RIGHT;
@@ -302,7 +302,7 @@ STATE homing() {
     // check if aligned to correct wall
     // rotate servo 90 deg to left and read sonar
     sensor_servo.write(180);
-    delay(1000);
+    delay(250);
     left_sonarsensor_cm = HC_SR04_range();
     if (left_sonarsensor_cm > 120) {
      // if true aligned on short wall
@@ -322,7 +322,7 @@ STATE homing() {
       } else {
         // turn servo 90 deg right
         sensor_servo.write(0);
-        delay(1000);
+        delay(250);
         right_sonarsensor_cm = HC_SR04_range();
         // home towards right wall
         home_side = RIGHT;
@@ -345,7 +345,7 @@ STATE homing() {
 
   // turn servo forward
   sensor_servo.write(90);
-  delay(1000);
+  delay(250);
   sonarsensor_cm = HC_SR04_range();
   // SerialCom->println(" distance from far wall: ");
   // SerialCom->println(sonarsensor_cm);
@@ -358,17 +358,17 @@ STATE homing() {
       //Serial.println(sonarsensor_cm);
       sonarsensor_cm = HC_SR04_range();
       //reverse();
+      delay(60);
       straight_y_homing(-1);
-      delay(20);
     }
     y_coord = 180 - sonarsensor_cm;
   } else {
     home_face = FRONT;
     while (sonarsensor_cm > 6) {
     //forward();
-    straight_y_homing(1);
     sonarsensor_cm = HC_SR04_range(); 
-    delay(20);   
+    delay(60); 
+    straight_y_homing(1);  
     }
     y_coord = sonarsensor_cm;
   } 
@@ -433,7 +433,7 @@ STATE path_following(){
   } else if (run_number > 0 && run_number < 3) {
     // for the first 2-ish runs, IR is good 
     if (run_side == LEFT) {
-      kp_side = 10; // can put back to 0 if performance is really bad on left side and just want to use gyro 
+      kp_side = 0; // can put back to 0 if performance is really bad on left side and just want to use gyro 
     } else {
       kp_side = 10;
     }
@@ -1038,7 +1038,7 @@ void straight_y_homing(int dir) {
 }
 
 void straight_x(int dir) {
-  past_error_x = 0;
+    past_error_x = 0;
     float error = GYRO_reading();
     float dif = error + past_error_x;
 
@@ -1083,7 +1083,7 @@ void straight_x(int dir) {
       right_front_motor.writeMicroseconds(1500 - speed_val);
     }
   } 
-  past_error_x = dif;
+
   past_error_y = dif;
 }
 
