@@ -364,7 +364,7 @@ STATE path_following(){
   if (kp_side == 0) {
   // relying on gyro therefore align to front before move over 
   if (run_face == FRONT) {
-    align_to_wall_sonar();
+    // align_to_wall_sonar();
   } else {
     // jam into the wall a little bit 
       sensor_servo.write(90);
