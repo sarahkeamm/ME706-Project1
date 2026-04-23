@@ -443,7 +443,7 @@ STATE path_following(){
     SerialCom->print(x_distance);
     SerialCom->print("right sonar: ");
     SerialCom->println(right_sonarsensor_cm);
-    delay(20);
+    delay(60);
   } 
   stop();
   x_coord = right_sonarsensor_cm;
