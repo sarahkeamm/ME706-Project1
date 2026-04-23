@@ -450,18 +450,19 @@ STATE path_following(){
     } 
   } else if (run_number == 7) {
     // use the opposite side wall sensors 
-     if (run_side == LEFT) {
-      kp_side = 5;
-    } else {
-      kp_side = 10;
-    }
+    //  if (run_side == LEFT) {
+    //   kp_side = 0;
+    // } else {
+    //   kp_side = 0;
+    // }
+    kp_side = 0;
   } else if (run_number == 8){
      if (run_side == LEFT) {
       kp_side = 0;
     } else {
       kp_side = 10;
     }
-  } else if (run_number > 9){
+  } else if (run_number >= 9){
     if (run_side == LEFT) {
       kp_side = 20;
     } else {
@@ -1106,6 +1107,8 @@ void straight_y(int run_face) {
   read_IR_sensors(LEFT);
   left_side_error = kp_side * (wall_sensor_left - frontleftsensor_cm);
   right_side_error = 0;
+  SerialCom->print("left error: ");
+  SerialCom->println(left_side_error);
   // if error is positive, need to turn cw, if error is negative, need to turn ccw
   } else {
   read_IR_sensors(RIGHT);
